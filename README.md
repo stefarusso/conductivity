@@ -3,11 +3,11 @@ Simple script for calculate the diagonal terms of conductivity.
 
 Conductivity can be calculated with:
 
-[![img](https://bit.ly/3fY21xL)](#)
+![img](tex2img.png)
 
 which can be calculated by the slope of mean square deviation taking into account even the off-diagonal elements i!=j:
 
-[![img](https://bit.ly/3WVaVwt)](#)
+![img2](tex2img_2.png)
 
 
 #### Input data
