@@ -27,3 +27,6 @@ charge   ,X_coord      ,Y_coord      ,Z-coord
 1     17.16800035  -14.08190288  -24.77136572
 -1    -22.58886859  -28.62449835   14.05828311
 ```
+
+#### Usage
+python cond.py input.xyz
