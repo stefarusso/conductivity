@@ -53,6 +53,6 @@ from the deviation is possibile to calculate MSD which is linked to the self-dif
 
 ![img](https://github.com/stefarusso/conducivity/blob/master/img/tex2img_3.png?raw=true)
 
-
+This can be usefull in case like ionic solutes in neutral solvents where there is very little correlation of motion between the ions. In case of ionic liquids this can lend to over-estimation of diffusion coefficient because th of-diagonal terms D_{ij} where the MSD is calculated by the product of the deviation of different ions can be not close to zero (as the solute exemple). This balance the value too positive of D_i giving a more valueble result with the collective D_coll
 
 
