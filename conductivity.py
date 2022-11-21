@@ -48,7 +48,7 @@ def process_frame(f):
 	return q_frame,x_frame,y_frame,z_frame
 
 
-
+#TRAJECTORY LOADING---------------------------------
 try:
 	with open(file,'r') as f:
 		q,x,y,z=[],[],[],[]
@@ -130,6 +130,20 @@ msd_anion=np.sum(r2_anion,axis=1)/r2_anion.shape[1]
 print("MSD_ANION : ",msd_anion.shape)
 
 
+def regression(msd,t,scaling=0.3):
+	idx=int(len(t)*scaling)
+	t_subset=t[idx:].reshape((-1,1))
+	msd_subset=msd[idx:]
+	print("SUB_T : " ,t_subset.shape)
+	print("SUB_MSD : ",msd_subset.shape)
+	model_c = LinearRegression().fit(t_subset,msd_subset)
+	print(f"slope CATION : {model_c.coef_} ")
+	print(f"Intercept: {model_c.intercept_} ")
+	print(f"D CATION : {model_c.coef_/6} pm^2/ps")
+	msd_pred = model_c.predict(t_subset)
+	return msd_pred, t_subset
+
+
 #REGRESSION
 #linear regression is done over 70% of the latter part of msd
 #CATION
@@ -155,99 +169,134 @@ print(f"D ANION : {model_a.coef_/6} pm^2/ps")
 msd_pred_a = model_a.predict(t_subset)
 
 
+# #PLOTTING
+# fig, ax = plt.subplots(1,2)
+# ax[0].plot(t,msd_cation,linewidth=1.5,label=r'msd mean',color='red',zorder=2)
+# # for mol in r2_cation.T:
+# # 	 ax[0].plot(t,mol,linewidth=0.5,alpha=0.2,color='black',zorder=1)
+# ax[0].plot(t_subset,msd_pred_c,label='linear regression',linewidth=1,linestyle='dashed',color='orange',zorder=3)
+# ax[0].plot(travis_data.t,travis_data.msd,linewidth=1,linestyle='dotted',label=r'msd travis',color='blue',zorder=3)
+# ax[0].plot(vmd_data_c.t,vmd_data_c.msd,linewidth=1.4,linestyle='dotted',label=r'msd vmd',color='purple',zorder=3)
+# ax[0].legend()
+# ax[0].set_title("Cation MSD")
+# ax[0].set_xlabel(r'time / ps')
+# ax[0].set_ylabel(r'MSD / pm^2')
+# #ax[0].set_ylim([0,max(msd_cation)*3])
+# ax[0].set_box_aspect(1)
+
+
+# ax[1].plot(t,msd_anion,linewidth=1.5,label=r'msd mean',color='red',zorder=2)
+# # for mol in r2_anion.T:
+# # 	 ax[1].plot(t,mol,linewidth=0.5,alpha=0.2,color='black',zorder=1)
+# ax[1].plot(t_subset,msd_pred_a,label='linear regression',linewidth=1,linestyle='dashed',color='orange',zorder=3)
+# ax[1].plot(travis_data_a.t,travis_data_a.msd,linewidth=1,linestyle='dotted',label=r'msd travis',color='blue',zorder=3)
+# ax[1].plot(vmd_data_a.t,vmd_data_a.msd,linewidth=1,linestyle='dotted',label=r'msd vmd',color='purple',zorder=3)
+# ax[1].legend()
+# ax[1].set_title("Anion MSD")
+# #ax[1].set_ylim([0,max(msd_anion)*3])
+# ax[1].set_xlabel(r'time / ps')
+# ax[1].set_ylabel(r'MSD / pm^2')
+# ax[1].set_box_aspect(1)
+# fig.tight_layout()
+# plt.show()
+
+
+
+#-------------------------------------------------------------
+#CORRELATION DEPTH
+#correlation depth 1/2
+depth=0.95
+
+print("-----------------------")
+print("TEST CORRELATION DEPTH")
+print("-----------------------")
+
+#ONLY CATION
+x_c=x[:,cation_idx[0]]
+print("cation X : ",x_c.shape)
+y_c=y[:,cation_idx[0]]
+print("cation Y : ",y_c.shape)
+z_c=z[:,cation_idx[0]]
+print("cation Z : ",z_c.shape)
+
+
+#loop over subsets
+subset_idx = np.arange(0,int(depth*x_c.shape[0]))
+print("interval index : ",len(subset_idx))
+max_origin_index = x_c.shape[0]-len(subset_idx)
+print("max_origin_index : ",max_origin_index)
+
+#FIRST
+print("ORIGIN : ",subset_idx[0])
+x=x_c[subset_idx,:]
+y=y_c[subset_idx,:]
+z=z_c[subset_idx,:]
+print("subset X : ",x.shape)
+print("subset Y : ",y.shape)
+print("subset Z : ",z.shape)
+
+#Deviations respect initial t
+dx=x[:,:]-x[0,:]
+dy=y[:,:]-y[0,:]
+dz=z[:,:]-z[0,:]
+
+#Product for selfdiffusion i*i
+r2=np.multiply(dx,dx)+np.multiply(dy,dy)+np.multiply(dz,dz)
+print("|R-R0|^2 : ",r2.shape)
+#mean over molecules
+r2=np.sum(r2,axis=1)/r2.shape[1]
+#UNIT CHANGES FROM A^2/ps -> pm^2/ps
+unit_conversion=1e4
+r2=r2*unit_conversion
+print("|R-R0|^2 MEAN : ",r2.shape)
+
+msd=r2
+i=1
+subset_idx=subset_idx+1
+
+#T VECTOR
+t_interval=np.arange(0,r2.shape[0]*dt,dt)
+print("T : ", t_interval.shape )
+
+#SECOND
+while subset_idx[0]<max_origin_index :
+	x=x_c[subset_idx,:]
+	y=y_c[subset_idx,:]
+	z=z_c[subset_idx,:]
+
+	#Deviations respect initial t
+	dx=x[:,:]-x[0,:]
+	dy=y[:,:]-y[0,:]
+	dz=z[:,:]-z[0,:]
+
+	#Product for selfdiffusion i*i
+	r2=np.multiply(dx,dx)+np.multiply(dy,dy)+np.multiply(dz,dz)
+	#mean over molecules
+	r2=np.sum(r2,axis=1)/r2.shape[1]
+	#UNIT CHANGES FROM A^2/ps -> pm^2/ps
+	unit_conversion=1e4
+	r2=r2*unit_conversion
+	msd=msd+r2
+	i+=1
+	subset_idx=subset_idx+1
+
+#T VECTOR
+t_interval=np.arange(0,msd.shape[0]*dt,dt)
+print("i : ",i)
+print("MSD_FINAL : ",msd.shape)
+msd=msd/i
+msd_pred,t_subset = regression(msd,t_interval)
+
+
 #PLOTTING
 fig, ax = plt.subplots(1,2)
-ax[0].plot(t,msd_cation,linewidth=1.5,label=r'msd mean',color='red',zorder=2)
-# for mol in r2_cation.T:
-# 	 ax[0].plot(t,mol,linewidth=0.5,alpha=0.2,color='black',zorder=1)
-ax[0].plot(t_subset,msd_pred_c,label='linear regression',linewidth=1,linestyle='dashed',color='orange',zorder=3)
+ax[0].plot(t_interval,msd,linewidth=1.5,label=r'msd mean',color='red',zorder=2)
+ax[0].plot(t_subset,msd_pred,label='linear regression',linewidth=1,linestyle='dashed',color='orange',zorder=3)
 ax[0].plot(travis_data.t,travis_data.msd,linewidth=1,linestyle='dotted',label=r'msd travis',color='blue',zorder=3)
 ax[0].plot(vmd_data_c.t,vmd_data_c.msd,linewidth=1.4,linestyle='dotted',label=r'msd vmd',color='purple',zorder=3)
 ax[0].legend()
 ax[0].set_title("Cation MSD")
 ax[0].set_xlabel(r'time / ps')
 ax[0].set_ylabel(r'MSD / pm^2')
-#ax[0].set_ylim([0,max(msd_cation)*3])
 ax[0].set_box_aspect(1)
-
-
-ax[1].plot(t,msd_anion,linewidth=1.5,label=r'msd mean',color='red',zorder=2)
-# for mol in r2_anion.T:
-# 	 ax[1].plot(t,mol,linewidth=0.5,alpha=0.2,color='black',zorder=1)
-ax[1].plot(t_subset,msd_pred_a,label='linear regression',linewidth=1,linestyle='dashed',color='orange',zorder=3)
-ax[1].plot(travis_data_a.t,travis_data_a.msd,linewidth=1,linestyle='dotted',label=r'msd travis',color='blue',zorder=3)
-ax[1].plot(vmd_data_a.t,vmd_data_a.msd,linewidth=1,linestyle='dotted',label=r'msd vmd',color='purple',zorder=3)
-ax[1].legend()
-ax[1].set_title("Anion MSD")
-#ax[1].set_ylim([0,max(msd_anion)*3])
-ax[1].set_xlabel(r'time / ps')
-ax[1].set_ylabel(r'MSD / pm^2')
-ax[1].set_box_aspect(1)
-fig.tight_layout()
 plt.show()
-
-
-
-#------------------------------
-#test con correlation depth
-
-
-
-
-# #correlation depth 1/3
-# depth=0.33
-# #CATION
-# print("TEST CATION SELF DIFFUSION")
-# x_c=x[:,cation_idx[0]]
-# print("cation X : ",x_c.shape)
-# y_c=y[:,cation_idx[0]]
-# print("cation Y : ",y_c.shape)
-# z_c=z[:,cation_idx[0]]
-# print("cation Z : ",z_c.shape)
-
-
-
-
-# #loop over subsets
-# subset=np.arange(0,int(depth*x_c.shape[0]))
-
-
-
-# x=x_c[subset,:]
-# y=y_c[subset,:]
-# z=z_c[subset,:]
-# print("subset X : ",x.shape)
-# print("subset Y : ",y.shape)
-# print("subset Z : ",z.shape)
-
-
-# #Deviations respect initial t
-# dx=x[:,:]-x[0,:]
-# dy=y[:,:]-y[0,:]
-# dz=z[:,:]-z[0,:]
-
-# #Product for selfdiffusion i*i
-# r2=np.multiply(dx,dx)+np.multiply(dy,dy)+np.multiply(dz,dz)
-# print("|R-R0|^2 : ",r2.shape)
-# #mean over molecules
-# r2=np.sum(r2,axis=1)/r2.shape[1]
-# #UNIT CHANGES FROM A^2/ps -> m^2/s
-# unit_conversion=1e-8
-# r2=r2*unit_conversion
-# print("|R-R0|^2 MEAN : ",r2.shape)
-
-
-
-
-
-
-
-
-
-# #T VECTOR
-# t=np.arange(0,r2.shape[0]*dt,dt)
-# print("T : ", t.shape )
-
-
-
-
