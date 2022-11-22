@@ -1,11 +1,11 @@
 ## Conductivity Calculation
 Simple script for calculate the diagonal terms of conductivity.
 
-Conductivity can be calculated with:
+Conductivity can be calculated with:  [1]
 
 ![img](/img/tex2img.png)
 
-which can be calculated by the slope of mean square deviation taking into account even the off-diagonal elements i!=j:
+which can be calculated by the slope of mean square deviation taking into account even the off-diagonal elements i!=j: [2]
 
 ![img2](/img/tex2img_2.png)
 
@@ -32,7 +32,9 @@ charge   ,X_coord      ,Y_coord      ,Z-coord
 python cond.py input.xyz
 
 ## How it works
-#### It's just for me, it's for remembering what I have written in the code (you can ignore it)
+#### Self-diffusion (i=j)
+
+It's easy to calculate and it's the only property from which is still available a reference value from other programs like Travis (http://www.travis-analyzer.de/) and VMD (https://github.com/giorginolab/vmd_diffusion_coefficient). MSD is taken with the simple product between the deviation of the same ions (i=j).
 
 The trajectory is extracted and stored in 4 array:
 - x [F,N]
@@ -48,11 +50,18 @@ With this structure is easy to find the deviation:
 
 ![img](https://github.com/stefarusso/conducivity/blob/master/img/tex2img_4.png?raw=true)
 
-from the deviation is possibile to calculate MSD which is linked to the self-diffusion coefficient:
+from the deviation is possibile to calculate MSD which is linked to the self-diffusion coefficient: [3,4]
 
 
 ![img](https://github.com/stefarusso/conducivity/blob/master/img/tex2img_3.png?raw=true)
 
 This can be usefull in case like ionic solutes in neutral solvents where there is very little correlation of motion between the ions. In case of ionic liquids this can lend to over-estimation of diffusion coefficient because th of-diagonal terms D_{ij} where the MSD is calculated by the product of the deviation of different ions can be not close to zero (as the solute exemple). This balance the value too positive of D_i giving a more valueble result with the collective D_coll
 
+#### Inter molecular correlations (i!=j)
+
+This is the quantity where ionic liquids start to have deviations from neutral species. In water this quantity is close to zero because solutes dynamics are uncorrelated and is often ignored. In ionic liquids ionic couples can move togheter and the diffusion of single ion can be higher than expected if we don't take into account the correlated movements that happen with the other ions in the simulations.
+
+##### Cation-Cation and Anion-Anion 
+i!=j.
+the procedure is the same at least up to the deviation matrix DeltaX,DeltaY,DeltaZ. This time there is the need of a loop over the ions. There are N*(N-1) products compared to the N * N in the i=j case
 
