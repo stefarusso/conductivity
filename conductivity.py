@@ -157,29 +157,30 @@ def self_product(dx,dy,dz):
 	return r2
 
 
-def get_self_msd(x_c,y_c,z_c,depth=0.3):
+def get_self_msd(x,y,z,depth=0.3):
 	#CORRELATION DEPTH
 	#is the percentage of the trajectory in which the correlation between ions is took in account
 	
 	#loop over subsets
 	print("Correlation depth : ",depth*100," %")
-	subset_idx = np.arange(0,int(depth*x_c.shape[0]))
-	max_origin_index = x_c.shape[0]-len(subset_idx)
+	subset_idx = np.arange(0,int(depth*x.shape[0]))
+	max_origin_index = x.shape[0]-len(subset_idx)
 	print("Number of intervals : ",max_origin_index)
 	msd = np.zeros(len(subset_idx))
 	i=0
 	#LOOP OVER INTERVALS
 	while subset_idx[0]<max_origin_index :
+		print(i)
 		if i%100 == 0:
 			print("Intervals processed : ",i)
-		x=x_c[subset_idx,:]
-		y=y_c[subset_idx,:]
-		z=z_c[subset_idx,:]
+		x_tmp=x[subset_idx,:]
+		y_tmp=y[subset_idx,:]
+		z_tmp=z[subset_idx,:]
 
 		#Deviations respect to the reference t0 of the interval
-		dx=x[:,:]-x[0,:]
-		dy=y[:,:]-y[0,:]
-		dz=z[:,:]-z[0,:]
+		dx=x_tmp[:,:]-x_tmp[0,:]
+		dy=y_tmp[:,:]-y_tmp[0,:]
+		dz=z_tmp[:,:]-z_tmp[0,:]
 
 		r2=self_product(dx,dy,dz)
 		msd=msd+r2
@@ -191,14 +192,88 @@ def get_self_msd(x_c,y_c,z_c,depth=0.3):
 	return msd
 
 
-print("-----------------------")
-print("Cation Self-diffusion   ")
-print("-----------------------")
-msd1=get_self_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.99)
-print("-----------------------")
-print("Anion Self-diffusion   ")
-print("-----------------------")
-msd2=get_self_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.99)
-plotting([msd1,msd2])
+
+
+
+# print("-----------------------")
+# print("Cation Self-diffusion   ")
+# print("-----------------------")
+#msd1=get_self_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.99)
+# print("-----------------------")
+# print("Anion Self-diffusion   ")
+# print("-----------------------")
+# msd2=get_self_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.99)
+# plotting([msd1,msd2])
+
+def comb(array):
+	#simple function i need to get all the combination of ij inner products without repetitions
+	return [np.multiply(array[:,0],i) for i in array[:,1:].T]
+
+import time
+
+def inter_same_product(dx,dy,dz):
+		start = time.time()
+		#f=lambda a:[np.multiply(a[:,0],i) for i in a[:,1:].T]
+		dx2,dy2,dz2=[],[],[]
+		for a,b,c in zip(dx.T,dy.T,dz.T):
+			dx2=dx2+comb(dx)
+			dy2=dy2+comb(dy)
+			dz2=dz2+comb(dz)
+			dx=np.delete(dx,0,axis=1)
+			dy=np.delete(dy,0,axis=1)
+			dz=np.delete(dz,0,axis=1)
+		#Then re-shape the product in the correct shape
+		dx2=np.array(dx2).T
+		dy2=np.array(dy2).T
+		dz2=np.array(dz2).T
+		r2=dx2+dy2+dz2
+		r2=np.sum(r2,axis=1)/r2.shape[1]
+		unit_conversion=1e4
+		r2=r2*unit_conversion
+		end = time.time()
+		print("TIME : ",end - start)
+		return r2
+
+def get_inter_msd(x,y,z,depth=0.3):
+	#CORRELATION DEPTH
+	#is the percentage of the trajectory in which the correlation between ions is took in account
+	
+	#loop over subsets
+	print("Correlation depth : ",depth*100," %")
+	subset_idx = np.arange(0,int(depth*x.shape[0]))
+	max_origin_index = x.shape[0]-len(subset_idx)
+	print("Number of intervals : ",max_origin_index)
+	msd = np.zeros(len(subset_idx))
+	count=0
+	#LOOP OVER INTERVALS
+	while subset_idx[0]<max_origin_index :
+		print(count)	
+		if count%100 == 0:
+			print("Intervals processed : ",count)
+		x_tmp=x[subset_idx,:]
+		y_tmp=y[subset_idx,:]
+		z_tmp=z[subset_idx,:]
+
+		#Deviations respect to the reference t0 of the interval
+		dx=x_tmp[:,:]-x_tmp[0,:]
+		dy=y_tmp[:,:]-y_tmp[0,:]
+		dz=z_tmp[:,:]-z_tmp[0,:]
+		#SPECIAL PHASE IF i!=j
+		r2=inter_same_product(dx,dy,dz)
+		#END SPECIAL PHASE
+
+		msd=msd+r2
+		count=count+1
+		subset_idx=subset_idx+1
+	print("All Interval processed")
+	#MSD MEAN OVER TOTAL NUMBER OF INTERVALS
+	msd=msd/count
+	return msd
+
+msd = get_inter_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.99)
+#plotting([msd])
+
+
+
 
 
