@@ -62,6 +62,11 @@ This can be usefull in case like ionic solutes in neutral solvents where there i
 This is the quantity where ionic liquids start to have deviations from neutral species. In water this quantity is close to zero because solutes dynamics are uncorrelated and is often ignored. In ionic liquids ionic couples can move togheter and the diffusion of single ion can be higher than expected if we don't take into account the correlated movements that happen with the other ions in the simulations.
 
 ##### Cation-Cation and Anion-Anion 
+
 i!=j.
 the procedure is the same at least up to the deviation matrix DeltaX,DeltaY,DeltaZ. This time there is the need of a loop over the ions. There are N*(N-1) products compared to the N * N in the i=j case
 
+###### first attempt
+
+every iteration it takes 3 seconds. it is way to slow to finish 10000ish cycles
+ time :  3.140069007873535
