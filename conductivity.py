@@ -3,7 +3,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 import pandas as pd
-
+import scipy
 #file='test/40_out.xyz'
 file='../test/lys/lys_100.xyz'
 
@@ -128,7 +128,7 @@ def get_t(msd,dt):
 	return np.arange(0,msd.shape[0]*dt,dt)
 
 
-def plotting(msd_list):
+def plotting(msd_list,filename='msd.csv'):
 	#
 	# Simple plotting of raw MSD and linear regression line
 	# - require a list of msd [msd_cation,msd_anion]
@@ -143,6 +143,7 @@ def plotting(msd_list):
 		ax[i].set_xlabel(r'time / ps')
 		ax[i].set_ylabel(r'MSD / pm^2')
 		ax[i].set_box_aspect(1)
+		pd.DataFrame({"t":t,"msd":msd}).to_csv(filename,header=["t","msd"],index=None)
 	fig.suptitle("Cation and Anion MSD")
 	plt.show()
 
@@ -198,51 +199,111 @@ def get_self_msd(x,y,z,depth=0.3):
 # print("-----------------------")
 # print("Cation Self-diffusion   ")
 # print("-----------------------")
-#msd1=get_self_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.99)
-# print("-----------------------")
+# msd1=get_self_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.99)
+# print("-----------------------") 
 # print("Anion Self-diffusion   ")
 # print("-----------------------")
 # msd2=get_self_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.99)
-# plotting([msd1,msd2])
+# plotting([msd1],"cation_selfdiffusion.csv")
+# plotting([msd2],"anion_selfdiffusion.csv")
 
-def comb(array):
-	#simple function i need to get all the combination of ij inner products without repetitions
-	return [np.multiply(array[:,0],i) for i in array[:,1:].T]
+
 
 import time
 
+
+# def inter_same_product(dx,dy,dz,I,J):
+# 	r2=np.multiply(dx[:,I],dx[:,J])+np.multiply(dy[:,I],dy[:,J])+np.multiply(dz[:,I],dz[:,J])
+# 	r2=np.sum(r2,axis=1)/r2.shape[1]
+# 	unit_conversion=1e4
+# 	r2=r2*unit_conversion
+# 	return r2
+
+
+
+# def combinations(array_len):
+# 	#return 2 list with the index for all the index combinations
+# 	idxs=np.arange(0,array_len)
+# 	i,j=[],[]
+# 	while len(idxs)>1:
+# 		for k in idxs[1:]:
+# 			i.append(idxs[0])
+# 			j.append(k) 
+# 		idxs=idxs[1:]
+# 	return i,j
+
+
+# def get_inter_msd(x,y,z,depth=0.3):
+# 	#CORRELATION DEPTH
+# 	#is the percentage of the trajectory in which the correlation between ions is took in account
+
+# 	#Function that calcolate all combinations ij without repetitions (binomial coefficient)
+# 	I,J=combinations(x.shape[1])
+# 	print("i_SHAPE: " , len(I))
+
+# 	#loop over subsets
+# 	print("Correlation depth : ",depth*100," %")
+# 	subset_idx = np.arange(0,int(depth*x.shape[0]))
+# 	max_origin_index = x.shape[0]-len(subset_idx)
+# 	print("Number of intervals : ",max_origin_index)
+
+# 	msd = np.zeros(len(subset_idx))
+# 	count=0
+# 	#LOOP OVER INTERVALS
+# 	while subset_idx[0]<max_origin_index :
+# 		print(count)	
+# 		if count%100 == 0:
+# 			print("Intervals processed : ",count)
+# 		#Deviations respect to the reference t0 of the interval
+# 		dx=x[subset_idx,:]-x[subset_idx[0],:]
+# 		dy=y[subset_idx,:]-y[subset_idx[0],:]
+# 		dz=z[subset_idx,:]-z[subset_idx[0],:]
+
+# 		#SPECIAL PHASE IF i!=j
+# 		start=time.time()
+# 		r2=inter_same_product(dx,dy,dz,I,J)
+# 		end=time.time()
+# 		print("time : ",end-start)
+# 		#END SPECIAL PHASE
+# 		msd=msd+r2
+# 		count=count+1
+# 		subset_idx=subset_idx+1
+# 	print("All Interval processed")
+# 	#MSD MEAN OVER TOTAL NUMBER OF INTERVALS
+# 	msd=msd/count
+# 	return msd
+
+
+
+
 def inter_same_product(dx,dy,dz):
-		start = time.time()
-		#f=lambda a:[np.multiply(a[:,0],i) for i in a[:,1:].T]
-		dx2,dy2,dz2=[],[],[]
-		for a,b,c in zip(dx.T,dy.T,dz.T):
-			dx2=dx2+comb(dx)
-			dy2=dy2+comb(dy)
-			dz2=dz2+comb(dz)
-			dx=np.delete(dx,0,axis=1)
-			dy=np.delete(dy,0,axis=1)
-			dz=np.delete(dz,0,axis=1)
-		#Then re-shape the product in the correct shape
-		dx2=np.array(dx2).T
-		dy2=np.array(dy2).T
-		dz2=np.array(dz2).T
-		r2=dx2+dy2+dz2
-		r2=np.sum(r2,axis=1)/r2.shape[1]
-		unit_conversion=1e4
-		r2=r2*unit_conversion
-		end = time.time()
-		print("TIME : ",end - start)
-		return r2
+	#it take dx dy and dz each with dimension [N_frame,N_molecules] and calculate the product mediated over uniques combinations
+	
+	#bin_coeff is the total number of unique products
+	bin_coeff=scipy.special.comb(dx.shape[1],2,exact=True)
+	dx_cs=dx[:,::-1].cumsum(axis=1)[:,::-1]-dx
+	dx2=np.einsum('ij,ji->i',dx,dx_cs.T)/bin_coeff
+	dy_cs=dy[:,::-1].cumsum(axis=1)[:,::-1]-dy
+	dy2=np.einsum('ij,ji->i',dy,dy_cs.T)/bin_coeff
+	dz_cs=dz[:,::-1].cumsum(axis=1)[:,::-1]-dz
+	dz2=np.einsum('ij,ji->i',dz,dz_cs.T)/bin_coeff
+	r2=dx2+dy2+dz2
+	unit_conversion=1e4
+	r2=r2*unit_conversion
+	return r2
+
+
 
 def get_inter_msd(x,y,z,depth=0.3):
 	#CORRELATION DEPTH
 	#is the percentage of the trajectory in which the correlation between ions is took in account
-	
+
 	#loop over subsets
 	print("Correlation depth : ",depth*100," %")
 	subset_idx = np.arange(0,int(depth*x.shape[0]))
 	max_origin_index = x.shape[0]-len(subset_idx)
 	print("Number of intervals : ",max_origin_index)
+
 	msd = np.zeros(len(subset_idx))
 	count=0
 	#LOOP OVER INTERVALS
@@ -250,18 +311,17 @@ def get_inter_msd(x,y,z,depth=0.3):
 		print(count)	
 		if count%100 == 0:
 			print("Intervals processed : ",count)
-		x_tmp=x[subset_idx,:]
-		y_tmp=y[subset_idx,:]
-		z_tmp=z[subset_idx,:]
-
 		#Deviations respect to the reference t0 of the interval
-		dx=x_tmp[:,:]-x_tmp[0,:]
-		dy=y_tmp[:,:]-y_tmp[0,:]
-		dz=z_tmp[:,:]-z_tmp[0,:]
-		#SPECIAL PHASE IF i!=j
-		r2=inter_same_product(dx,dy,dz)
-		#END SPECIAL PHASE
+		dx=x[subset_idx,:]-x[subset_idx[0],:]
+		dy=y[subset_idx,:]-y[subset_idx[0],:]
+		dz=z[subset_idx,:]-z[subset_idx[0],:]
 
+		#SPECIAL PHASE IF i!=j
+		start=time.time()
+		r2=inter_same_product(dx,dy,dz)
+		end=time.time()
+		print("time : ",end-start)
+		#END SPECIAL PHASE
 		msd=msd+r2
 		count=count+1
 		subset_idx=subset_idx+1
@@ -270,8 +330,12 @@ def get_inter_msd(x,y,z,depth=0.3):
 	msd=msd/count
 	return msd
 
-msd = get_inter_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.99)
-#plotting([msd])
+
+
+
+#INTERDIFFUSION
+msd = get_inter_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.5)
+plotting([msd])
 
 
 
