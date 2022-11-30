@@ -95,7 +95,7 @@ from the deviation is possibile to calculate MSD which is linked to the self-dif
 ```math
 \begin{align}
 MSD(t)&=\Delta X(t)+ \Delta Y(t)+\Delta Z(t)    &\qquad[5] \\
-D_i&=\lim_{t\to\infty}\frac{z_i^2\;MSD(t)}{6t}
+D_i&=\lim_{t\to\infty}\frac{z_i^2\;MSD(t)}{6t}.    &\qquad[6]
 \end{align}
 ```
 
@@ -103,18 +103,24 @@ This can be usefull in case like ionic solutes in neutral solvents where there i
 
 the program can reproduce the same results of Travis and VMD as you can see here
 
-![img](/img/.png)
+![img](/img/selfdiffusion.png)
 
 #### Inter molecular correlations ( $\boldsymbol{i \neq j}$ )
 
 This is the quantity where ionic liquids start to have deviations from neutral species. In water this quantity is close to zero because solutes dynamics are uncorrelated and is often ignored. In ionic liquids ionic couples can move togheter and the diffusion of single ion can be higher than expected if we don't take into account the correlated movements that happen with the other ions in the simulations.
 
-##### Cation-Cation and Anion-Anion $i\neq j$
+##### Cation-Cation and Anion-Anion $\boldsymbol{i \neq j}$
 
-the procedure is the same at least up to the deviation matrix $\Delta X$ , $\Delta Y$ , $\Delta Z$ . This time there is the need of a loop over the ions. There are N*(N-1) products compared to the N * N in the i=j case. 
+the procedure is the same at least up to the deviation matrix $\Delta X$ , $\Delta Y$ , $\Delta Z$ . This time there is the need of a  two nested loops over the ions. This make the double sum over products really slow  $O(n^2)$  because there are  ${N\choose 2}=\frac{N!}{2(N-2)!}$ unique combinations to sum over. One full iteration of two loops can take up to 6seconds in the worst case, since this sum has to be repeated over all the sub-sumple of frames (can be quite big 1000-100000) it's unrealistically too slow.
+It's possible to rearrange the double sum as a matrix multiplication and take advantage of the processor efficency of numpy. Here you can see the procedure in a simple 3x1 array, in the program this has being extended in 2D:
 
-###### first attempt
-
-every iteration it takes 3 seconds. it is way to slow to finish 10000ish cycles
- time :  3.140069007873535
-
+```math
+\begin{align}
+A&=[a_0,a_1,a_2] \\
+\sum_{i\neq j}^3 a_i * a_j & = a_0 a_1 + a_0 a_2 + a_1 a_2 \\  
+&=a_0(a_1+a_2)+a_1(a_2)+a_2*(0)\\ \\
+A.cumsum()-A&=[0\,,a_2\,,a_2+a_1]\\ \\
+\sum_{i\neq j}^3 a_i*a_j &=A*[A.cumsum()-A]_{inverted}^T= [a_0,a_1,a_2]\begin{bmatrix}a_1+a_2\\a_2\\0\end{bmatrix}
+\end{align}
+```
+This granted $O(n)$ gaining a 100x speedup (now it takes around 0.02seconds for iteration)
