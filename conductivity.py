@@ -4,10 +4,11 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 import pandas as pd
 import scipy
+import time
 
 #Trajectory file FROM USER INPUT
 #file='test/40_out.xyz'
-file='../test/lys/lys_100.xyz'
+filename='../test/lys/lys_100.xyz'
 
 
 #time step in picoseconds FROM USER INPUT
@@ -39,15 +40,15 @@ def process_frame(trajectory_file_object):
 														#FROM THIRD LINE there are the coordinates
 	i=0
 	#initialize variables
-	q_frame, x_frame, y_frame,z_frame= [],[],[],[]
+	q_frames, x_frames, y_frames,z_frames= [],[],[],[]
 	#cicle over molecules
 	for i in range(n_molecules):
 		charge , coordinates = process_line(read_line(trajectory_file_object))	
-		q_frame.append(charge)
-		x_frame.append(coordinates[0])
-		y_frame.append(coordinates[1])
-		z_frame.append(coordinates[2])
-	return q_frame,x_frame,y_frame,z_frame
+		q_frames.append(charge)
+		x_frames.append(coordinates[0])
+		y_frames.append(coordinates[1])
+		z_frames.append(coordinates[2])
+	return q_frames,x_frames,y_frames,z_frames
 
 
 
@@ -69,64 +70,63 @@ vmd_data_c.msd=vmd_data_c.msd*1e4
 #----------------------------
 
 
+def load_trajectory(filename):
+	#TRAJECTORY LOADING
+	try:
+		with open(filename,'r') as trajectory_file_object:
+			q,x,y,z=[],[],[],[]
+			print("LOADING TRAJECTORY FILE")
+			while True:
+				q_new,x_new,y_new,z_new=process_frame(trajectory_file_object)
+				if q!=q_new and q!=[]:
+					#check that the order of the atom didn't changed from frame to frame
+					raise Exception("ERROR: the order of molecules has changed in the dynamics. Check your file please")
+				q=q_new
+				x.append(x_new)
+				y.append(y_new)
+				z.append(z_new)
+	except End_of_Loop:
+		print("End of File")
+		pass
+	#ALL TRAJECTORY LOADED
 
+	x=np.array(x)
+	y=np.array(y)
+	z=np.array(z)
+	q=np.array(q)
+	#select the indexes of anion and cations
+	#is a tuple of array, one for axis
+	cation_idx=np.where(q == 1)
+	anion_idx=np.where(q == -1)
 
-#TRAJECTORY LOADING---------------------------------
-try:
-	with open(file,'r') as f:
-		q,x,y,z=[],[],[],[]
-		print("LOADING TRAJECTORY FILE")
-		while True:
-			q_new,x_new,y_new,z_new=process_frame(f)
-			if q!=q_new and q!=[]:
-				#check that the order of the atom didn't changed from frame to frame
-				raise Exception("ERROR: the order of molecules has changed in the dynamics. Check your file please")
-			q=q_new
-			x.append(x_new)
-			y.append(y_new)
-			z.append(z_new)
-except End_of_Loop:
-	print("End of File")
-	pass
-x=np.array(x)
-y=np.array(y)
-z=np.array(z)
-q=np.array(q)
-#select the indexes of anion and cations
-#is a tuple of array, one for axis
-cation_idx=np.where(q == 1)
-anion_idx=np.where(q == -1)
+	#PRINTING INFO ON TRAJECTORY
+	print("LOADING TRAJECTORY FILE : COMPLETE")
 
+	#CHECKING PROPER DIMENSIONS OF X Y Z 
+	if x.shape == y.shape == z.shape and q.shape[0] == x.shape[1] == y.shape[1] == z.shape[1]:
+		print("Total Number of Frame : ",x.shape[0])
+		print("Total length of trajectory : ",x.shape[0]*dt, "ps")
+		print("Total number of Molecules : ",x.shape[1])
+	else:
+		raise Exception("SOMETHING WRONG WITH THE TRAJECTORY")
 
+	return x,y,z,q,cation_idx,anion_idx
 
-
-
-
-
-#PRINTING INFO ON TRAJECTORY
-print("LOADING TRAJECTORY FILE : COMPLETE")
-
-#CHECKING PROPER DIMENSIONS OF X Y Z 
-if x.shape == y.shape == z.shape and q.shape[0] == x.shape[1] == y.shape[1] == z.shape[1]:
-	print("Total Number of Frame : ",x.shape[0])
-	print("Total length of trajectory : ",x.shape[0]*dt, "ps")
-	print("Total number of Molecules : ",x.shape[1])
-else:
-	raise Exception("SOMETHING WRONG WITH THE TRAJECTORY")
-#---------------------------
-#END OF TRAJECTORY LOADING
-#---------------------------
 
 def regression(msd,t,scaling=0.3):
 	#Use skitlearn tools for making the linear regression
+
+	#it takes the subset of time vector and MSD to perform linear regression
 	idx=int(len(t)*scaling)
 	t_pred=t[idx:].reshape((-1,1))
 	msd_subset=msd[idx:]
+	#LINEAR REGRESSION
 	model_c = LinearRegression().fit(t_pred,msd_subset)
 	print("LINEAR REGRESSION ON THE LAST ",100-scaling*100," %")
 	print(f"slope : {model_c.coef_} ")
 	print(f"Intercept: {model_c.intercept_} ")
 	print(f"D : {model_c.coef_/6} pm^2/ps")
+	#generate msd_predition point for plotting with the same spacing and interval of t_prediction
 	msd_pred = model_c.predict(t_pred)
 	return msd_pred, t_pred
 
@@ -137,7 +137,7 @@ def get_t(msd,dt):
 
 def plotting(msd_list,filename='msd.csv'):
 	# Simple plotting of raw MSD and linear regression line
-	# - require a list of msd [msd_cation,msd_anion]
+	# !!!! require a list of msd_list = [msd_cation,msd_anion] !!!!
 	fig, ax = plt.subplots(1,2)
 	for i,msd in enumerate(msd_list):
 		t=get_t(msd,dt)
@@ -152,76 +152,61 @@ def plotting(msd_list,filename='msd.csv'):
 	fig.suptitle("Cation and Anion MSD")
 	plt.show()
 
+#----------------
+
+#<--------------------------------------------------------TEST MEAN FIRST AND THEN SUM!!!!!!!
 def self_product(dx,dy,dz):
-	#Product for selfdiffusion i*i
-	r2=np.multiply(dx,dx)+np.multiply(dy,dy)+np.multiply(dz,dz)
+	#Product for selfdiffusion i*i cation-cation or anion-anion
+	#dx,dy and dz are matrix [F,N]
+	dr2=np.multiply(dx,dx)+np.multiply(dy,dy)+np.multiply(dz,dz)
 	#mean over N molecules
-	r2=np.sum(r2,axis=1)/r2.shape[1]
+	dr2=np.sum(dr2,axis=1)/dr2.shape[1]
 	#UNIT CHANGES FROM A^2/ps -> pm^2/ps
 	unit_conversion=1e4
-	r2=r2*unit_conversion
-	return r2
+	rd2=dr2*unit_conversion
+	return dr2
 
 
-def get_self_msd(x,y,z,depth=0.3):
+def get_selfdiffusion_msd(x,y,z,depth=0.3):
 	#CORRELATION DEPTH
 	#is the percentage of the trajectory in which the correlation between ions is took in account
 	
 	#loop over subsets
 	print("Correlation depth : ",depth*100," %")
+	#subset_idx contains all the indexes for the subset of lenght given by the correlation depth
 	subset_idx = np.arange(0,int(depth*x.shape[0]))
 	max_origin_index = x.shape[0]-len(subset_idx)
 	print("Number of intervals : ",max_origin_index)
+	#initialize the msd sum
 	msd = np.zeros(len(subset_idx))
-	i=0
+	count=0
 	#LOOP OVER INTERVALS
 	while subset_idx[0]<max_origin_index :
-		print(i)
-		if i%100 == 0:
-			print("Intervals processed : ",i)
-		x_tmp=x[subset_idx,:]
-		y_tmp=y[subset_idx,:]
-		z_tmp=z[subset_idx,:]
-
+		if count%50 == 0:
+			print("Intervals processed : ",count,"/",max_origin_index)
 		#Deviations respect to the reference t0 of the interval
-		dx=x_tmp[:,:]-x_tmp[0,:]
-		dy=y_tmp[:,:]-y_tmp[0,:]
-		dz=z_tmp[:,:]-z_tmp[0,:]
-
-		r2=self_product(dx,dy,dz)
-		msd=msd+r2
-		i+=1
+		dx=x[subset_idx,:]-x[subset_idx[0],:]
+		dy=y[subset_idx,:]-y[subset_idx[0],:]
+		dz=z[subset_idx,:]-z[subset_idx[0],:]
+		dr2=self_product(dx,dy,dz)
+		msd=msd+dr2
+		count+=1
 		subset_idx=subset_idx+1
 	print("All Interval processed")
 	#MSD MEAN OVER TOTAL NUMBER OF INTERVALS
-	msd=msd/i
+	msd=msd/count
 	return msd
 
 
-
-
-
-# print("-----------------------")
-# print("Cation Self-diffusion   ")
-# print("-----------------------")
-#msd1=get_self_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.50)
-# print("-----------------------") 
-# print("Anion Self-diffusion   ")
-# print("-----------------------")
-#msd2=get_self_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.50)
-# plotting([msd1],"cation_selfdiffusion.csv")
-# plotting([msd2],"anion_selfdiffusion.csv")
-
-
-
-
-import time
-
 #i!=j Cation-Cation and Anion-Anion
-def inter_same_product(dx,dy,dz):
-	#it take dx dy and dz each with dimension [N_frame,N_molecules] and calculate the product mediated over uniques combinations
+def interdiffusion_same_product(dx,dy,dz):
+	#i!=j Cation-Cation or Anion,Anion
+	#
+	#it take dx dy and dz each with dimension [N_frame,N_molecules] 
+	#and calculate the product mediated over uniques combinations
 	
 	#bin_coeff is the total number of unique products
+	#it is required to mediate over all the possible unique combinations
 	bin_coeff=scipy.special.comb(dx.shape[1],2,exact=True)
 	dx_cs=dx[:,::-1].cumsum(axis=1)[:,::-1]-dx
 	dx2=np.einsum('ij,ji->i',dx,dx_cs.T)/bin_coeff
@@ -229,13 +214,13 @@ def inter_same_product(dx,dy,dz):
 	dy2=np.einsum('ij,ji->i',dy,dy_cs.T)/bin_coeff
 	dz_cs=dz[:,::-1].cumsum(axis=1)[:,::-1]-dz
 	dz2=np.einsum('ij,ji->i',dz,dz_cs.T)/bin_coeff
-	r2=dx2+dy2+dz2
+	dr2=dx2+dy2+dz2
 	unit_conversion=1e4
-	r2=r2*unit_conversion
-	return r2
+	dr2=dr2*unit_conversion
+	return dr2
 
 
-def product(delta1,delta2):
+def inter_product(delta1,delta2):
 	#product function for inter ions inter-diffusion 
 	#cation_i-anion_j with al possible product ij (N_i*N_j possibilities) 
 	tot_number_combination=delta1.shape[1]*delta2.shape[1]
@@ -247,22 +232,27 @@ def product(delta1,delta2):
 	delta_square=delta_square/tot_number_combination
 	return delta_square
 
-#i!=j Cation-anion
-def inter_product(dx,dy,dz,cation_anion_idx):
+
+def interdiffusion_inter_product(dx,dy,dz,cation_anion_idx):
+	#i!=j Cation-Anion
+	#
 	#it require the index of cations and anions for selecting the right subdata from dx dy and dz
 	#it calculate the sum of all possible product ij, where i=cations and j=anions	
 	cation_idx,anion_idx = cation_anion_idx
-	dx2=product(dx[:,cation_idx[0]],dx[:,anion_idx[0]])
-	dy2=product(dy[:,cation_idx[0]],dx[:,anion_idx[0]])
-	dz2=product(dz[:,cation_idx[0]],dx[:,anion_idx[0]])
-	r2=dx2+dy2+dz2
+	dx2=inter_product(dx[:,cation_idx[0]],dx[:,anion_idx[0]])
+	dy2=inter_product(dy[:,cation_idx[0]],dx[:,anion_idx[0]])
+	dz2=inter_product(dz[:,cation_idx[0]],dx[:,anion_idx[0]])
+	dr2=dx2+dy2+dz2
 	unit_conversion=1e4
-	r2=r2*unit_conversion
-	return r2
+	dr2=dr2*unit_conversion
+	return dr2
 
-def get_inter_msd(x,y,z,depth=0.3,cation_anion_idx=None):
+def get_interdiffusion_msd(x,y,z,depth=0.3,cation_anion_idx=None):
 	#CORRELATION DEPTH
-	#is the percentage of the trajectory in which the correlation between ions is took in account
+	#is the percentage of the trajectory in which the correlation between ions is took in account	
+	#
+	#This function calculates the MSD when i!=j 
+	#In the case same-ion (cation-cation and anion-anion) inter-ion (cation-anion)
 
 	#loop over subsets
 	print("Correlation depth : ",depth*100," %")
@@ -284,13 +274,13 @@ def get_inter_msd(x,y,z,depth=0.3,cation_anion_idx=None):
 		#SPECIAL PHASE IF i!=j
 		start=time.time()
 		if cation_anion_idx:
-			r2=inter_product(dx,dy,dz,cation_anion_idx)
+			dr2=interdiffusion_inter_product(dx,dy,dz,cation_anion_idx)
 		else:
-			r2=inter_same_product(dx,dy,dz)
+			dr2=interdiffusion_same_product(dx,dy,dz)
 		end=time.time()
 		#print("time : ",end-start)
 		#END SPECIAL PHASE
-		msd=msd+r2
+		msd=msd+dr2
 		count=count+1
 		subset_idx=subset_idx+1
 	print("All Interval processed")
@@ -299,8 +289,27 @@ def get_inter_msd(x,y,z,depth=0.3,cation_anion_idx=None):
 	return msd
 
 
+
+x,y,z,q,cation_idx,anion_idx=load_trajectory(filename)
+
+#SELFDIFFUSION
+
+# print("-----------------------")
+# print("Cation Self-diffusion   ")
+# print("-----------------------")
+#msd1=get_selfdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.50)
+# print("-----------------------") 
+# print("Anion Self-diffusion   ")
+# print("-----------------------")
+#msd2=get_self_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.50)
+# plotting([msd1],"cation_selfdiffusion.csv")
+# plotting([msd2],"anion_selfdiffusion.csv")
+
+
+
+
 # #INTER-IONS  <-----
-# msd1 = get_inter_msd(x,y,z,depth=0.7,cation_anion_idx=[cation_idx,anion_idx])
+# msd1 = get_interdiffusion_msd(x,y,z,depth=0.7,cation_anion_idx=[cation_idx,anion_idx])
 
 # fig, ax = plt.subplots()
 # t=get_t(msd1,dt)
@@ -318,8 +327,8 @@ def get_inter_msd(x,y,z,depth=0.3,cation_anion_idx=None):
 
 
 #INTERDIFFUSION cation-cation and anion-anion
-msd1 = get_inter_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.9)
-msd2= get_inter_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.9)
+msd1 = get_interdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.9)
+msd2= get_interdiffusion_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.9)
 
 
 fig, ax = plt.subplots(1,2)
@@ -342,9 +351,6 @@ ax[1].set_box_aspect(1)
 fig.suptitle("Cation and Anion inter-diffusion MSD")
 plt.show()
 
-
-
-#plotting([msd])
 
 
 
