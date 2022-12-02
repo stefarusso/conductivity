@@ -6,7 +6,9 @@ Conductivity can be calculated with:
 ```math
 \sigma= \frac{e^2 }{V_{cell} \, K_b \, T } \lim_{t\to\infty} \frac{1}{6t} \, \frac{1}{N} \sum_{i,j}^{N} z_iz_j < [ R_i(t)-R_i(t_0) ] [ R_j(t)-R_j(t_0) ]>_t      \qquad[1]  \\
 
-```
+``` 
+
+Where $V_{cell}$ is the volume of the simulation cell in angstrom, $T$ is temperature in kelvin, $t$ is the simulation time, $N$ is the total number of combinations ij and $R_i(t)$ is the position of center of mass of molecule $i$ at time $t$. 
 
 which can be calculated by the slope of mean square deviation taking into account even the off-diagonal elements $i \neq j $:
 
@@ -14,7 +16,7 @@ which can be calculated by the slope of mean square deviation taking into accoun
 \begin{align}
 \sigma &= \frac{e^2 }{V_{cell} \, K_b \, T } \, D_{coll}         &\qquad[2]  \\
 D_{coll}&= \lim_{t\to\infty} \frac{1}{6t} \, \frac{1}{N} \sum_{i,j}^{N} z_iz_j < [ R_i(t)-R_i(t_0) ] [ R_j(t)-R_j(t_0) ]>_t      &\qquad[3]  \\
-D_{coll}&=D_{j} + D_{i} +D_{ij}
+D_{coll}&=D_{j} + D_{i} +D_{ij}  &\qquad[4]
 \end{align}
 ```
 
@@ -50,7 +52,7 @@ It's easy to calculate and it's the only property from which is still available 
 
 ```math
 \begin{align}
-D_{i}&= \lim_{t\to\infty} \frac{1}{6t} \, \frac{1}{N} \sum_{i}^{N} z_i^2 < [ R_i(t)-R_i(t_0) ]^2 >_t      &\qquad[4]  
+D_{i}&= \lim_{t\to\infty} \frac{1}{6t} \, \frac{1}{N} \sum_{i}^{N} z_i^2 < [ R_i(t)-R_i(t_0) ]^2 >_t      &\qquad[5]  
 \end{align}
 ```
 
@@ -94,8 +96,11 @@ from the deviation is possibile to calculate MSD which is linked to the self-dif
 
 ```math
 \begin{align}
-MSD(t)&=\Delta X(t)+ \Delta Y(t)+\Delta Z(t)    &\qquad[5] \\
-D_i&=\lim_{t\to\infty}\frac{z_i^2\;MSD(t)}{6t}.    &\qquad[6]
+MSD(t)   = \frac{1}{N} \sum_{i}^{N} z_i^2 < [ R_i(t+\Delta t)-R_i(t) ]^2 >               &\qquad[6] \\ \\
+\Delta R_i(t) = (\Delta X_i(t)^2 +\Delta Y_i(t)^2 + \Delta Z_i(t)^2)^{\frac{1}{2}}      \\
+\Delta R_i(t)^2 = \Delta X_i(t)^2 +\Delta Y_i(t)^2 + \Delta Z_i(t)^2                    &\qquad[7]\\ \\
+MSD(t)=\frac{1}{N}*(\Delta X(t)^2+ \Delta Y(t)^2+\Delta Z(t)^2)    &\qquad[8] \\
+D_i=\lim_{t\to\infty}\frac{z_i^2\;MSD(t)}{6t}.    &\qquad[9]
 \end{align}
 ```
 
@@ -124,3 +129,19 @@ A.cumsum()-A&=[0\,,a_2\,,a_2+a_1]\\ \\
 \end{align}
 ```
 This granted $O(n)$ gaining a 100x speedup (now it takes around 0.02seconds for iteration)
+
+This algorithm give us the mean of single coordinates but this is not a problem because the two means are equivalent:
+
+```math
+\begin{align}
+\overline{\Delta R^2(t)} = \frac{1}{N} \sum_{i,j}^{N} \Delta R_{i,j}(t)^2 &= \frac{1}{N} \sum_{i,j}^{N} (\,\,\sqrt{    \Delta X_{i,j}(t)^2 +\Delta Y_{i,j}(t)^2 + \Delta Z_{i,j}(t)^2     }\,\,)^2 \\
+&= \frac{1}{N} [\sum_{i,j}^{N}   \Delta X_{i,j}(t)^2 +\Delta Y_{i,j}(t)^2 + \Delta Z_{i,j}(t)^2 ]   \\
+&= \sum_{i,j}^{N}   [\frac{1}{N}\Delta X_{i,j}(t)^2 +\frac{1}{N}\Delta Y_{i,j}(t)^2 + \frac{1}{N}\Delta Z_{i,j}(t)^2 ]   \\
+&= \sum_{i,j}^{N}   \frac{1}{N}\Delta X_{i,j}(t)^2 +\sum_{i,j}^{N}\frac{1}{N}\Delta Y_{i,j}(t)^2 + \sum_{i,j}^{N}\frac{1}{N}\Delta Z_{i,j}(t)^2    \\
+&= \overline{\Delta X^2(t)}  +  \overline{\Delta Y^2(t)}  +  \overline{\Delta Z^2(t)}
+\end{align}
+```
+
+
+##### Cation-Anion $\boldsymbol{i \neq j}$
+The same procedure is done with the only exception that here all the product ij ($N_i*N_j$) need to be done compared with the cation-cation where the same ion product need to be excluded ${N\choose 2}$. So it's a bit more simple since the matrix multiplication ij is enough to probe all the deviation products.
