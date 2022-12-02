@@ -56,14 +56,14 @@ def process_frame(trajectory_file_object):
 #DATA
 travis_data=pd.read_csv("../test/lys/lys_c_travis.csv",sep='; ',header=0,engine='python')
 travis_data.columns = ['t', 'msd', 'derivative']
-travis_data_a=pd.read_csv("../test/lys/lys_a_travis.csv",sep='; ',header=0,engine='python')
-travis_data_a.columns = ['t', 'msd', 'derivative']
+#travis_data_a=pd.read_csv("../test/lys/lys_a_travis.csv",sep='; ',header=0,engine='python')
+#travis_data_a.columns = ['t', 'msd', 'derivative']
 vmd_data_c=pd.read_csv("../test/lys/vmd_c.dat",sep=' ',header=None)
 vmd_data_c.columns = ['t', 'msd']
-vmd_data_a=pd.read_csv("../test/lys/vmd_a.dat",sep=' ',header=None)
-vmd_data_a.columns = ['t', 'msd']
-vmd_data_a.t=vmd_data_a.t*1e3
-vmd_data_a.msd=vmd_data_a.msd*1e4
+#vmd_data_a=pd.read_csv("../test/lys/vmd_a.dat",sep=' ',header=None)
+#vmd_data_a.columns = ['t', 'msd']
+#vmd_data_a.t=vmd_data_a.t*1e3
+#vmd_data_a.msd=vmd_data_a.msd*1e4
 vmd_data_c.t=vmd_data_c.t*1e3
 vmd_data_c.msd=vmd_data_c.msd*1e4
 #DATA 
@@ -163,7 +163,7 @@ def self_product(dx,dy,dz):
 	dr2=np.sum(dr2,axis=1)/dr2.shape[1]
 	#UNIT CHANGES FROM A^2/ps -> pm^2/ps
 	unit_conversion=1e4
-	rd2=dr2*unit_conversion
+	dr2=dr2*unit_conversion
 	return dr2
 
 
@@ -297,19 +297,32 @@ x,y,z,q,cation_idx,anion_idx=load_trajectory(filename)
 # print("-----------------------")
 # print("Cation Self-diffusion   ")
 # print("-----------------------")
-#msd1=get_selfdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.50)
+msd1=get_selfdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.70)
+fig, ax = plt.subplots()
+t=get_t(msd1,dt)
+msd1_pred,t_pred = regression(msd1,t)
+ax.plot(t,msd1,linewidth=1.3,label=r'msd',color='red',zorder=2)
+ax.plot(t_pred,msd1_pred,label='linear regression',linewidth=1,linestyle='dashed',color='blue',zorder=3)
+ax.plot(travis_data.t,travis_data.msd,label='vmd',linewidth=1,linestyle='dashed',color='red',zorder=3)
+ax.plot(vmd_data_c.t,vmd_data_c.msd,label='travis',linewidth=1,linestyle='dashed',color='green',zorder=3)
+ax.legend()
+ax.set_xlabel(r'time / ps')
+ax.set_ylabel(r'MSD / pm^2')
+ax.set_box_aspect(1)
+fig.suptitle("Cation self-diffusion MSD")
+plt.show()
 # print("-----------------------") 
 # print("Anion Self-diffusion   ")
 # print("-----------------------")
 #msd2=get_self_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.50)
-# plotting([msd1],"cation_selfdiffusion.csv")
+plotting([msd1],"cation_selfdiffusion.csv")
 # plotting([msd2],"anion_selfdiffusion.csv")
 
 
 
 
 # #INTER-IONS  <-----
-# msd1 = get_interdiffusion_msd(x,y,z,depth=0.7,cation_anion_idx=[cation_idx,anion_idx])
+#msd1 = get_interdiffusion_msd(x,y,z,depth=0.7,cation_anion_idx=[cation_idx,anion_idx])
 
 # fig, ax = plt.subplots()
 # t=get_t(msd1,dt)
@@ -327,29 +340,29 @@ x,y,z,q,cation_idx,anion_idx=load_trajectory(filename)
 
 
 #INTERDIFFUSION cation-cation and anion-anion
-msd1 = get_interdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.9)
-msd2= get_interdiffusion_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.9)
-
-
-fig, ax = plt.subplots(1,2)
-t=get_t(msd1,dt)
-msd1_pred,t_pred = regression(msd1,t)
-ax[0].plot(t,msd1,linewidth=1.3,label=r'msd',color='red',zorder=2)
-ax[0].plot(t_pred,msd1_pred,label='linear regression',linewidth=1,linestyle='dashed',color='blue',zorder=3)
-ax[0].legend()
-ax[0].set_xlabel(r'time / ps')
-ax[0].set_ylabel(r'MSD / pm^2')
-ax[0].set_box_aspect(1)
-msd2_pred,t_pred = regression(msd2,t)
-ax[1].plot(t,msd2,linewidth=1.3,label=r'msd',color='red',zorder=2)
-ax[1].plot(t_pred,msd2_pred,label='linear regression',linewidth=1,linestyle='dashed',color='blue',zorder=3)
-ax[1].legend()
-ax[1].set_xlabel(r'time / ps')
-ax[1].set_ylabel(r'MSD / pm^2')
-ax[1].set_box_aspect(1)
-#pd.DataFrame({"t":t,"msd":msd}).to_csv(filename,header=["t","msd"],index=None)
-fig.suptitle("Cation and Anion inter-diffusion MSD")
-plt.show()
+# msd1 = get_interdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.9)
+# msd2= get_interdiffusion_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.9)
+#
+#
+# fig, ax = plt.subplots(1,2)
+# t=get_t(msd1,dt)
+# msd1_pred,t_pred = regression(msd1,t)
+# ax[0].plot(t,msd1,linewidth=1.3,label=r'msd',color='red',zorder=2)
+# ax[0].plot(t_pred,msd1_pred,label='linear regression',linewidth=1,linestyle='dashed',color='blue',zorder=3)
+# ax[0].legend()
+# ax[0].set_xlabel(r'time / ps')
+# ax[0].set_ylabel(r'MSD / pm^2')
+# ax[0].set_box_aspect(1)
+# msd2_pred,t_pred = regression(msd2,t)
+# ax[1].plot(t,msd2,linewidth=1.3,label=r'msd',color='red',zorder=2)
+# ax[1].plot(t_pred,msd2_pred,label='linear regression',linewidth=1,linestyle='dashed',color='blue',zorder=3)
+# ax[1].legend()
+# ax[1].set_xlabel(r'time / ps')
+# ax[1].set_ylabel(r'MSD / pm^2')
+# ax[1].set_box_aspect(1)
+# #pd.DataFrame({"t":t,"msd":msd}).to_csv(filename,header=["t","msd"],index=None)
+# fig.suptitle("Cation and Anion inter-diffusion MSD")
+# plt.show()
 
 
 
