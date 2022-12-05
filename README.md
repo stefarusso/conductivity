@@ -122,7 +122,7 @@ The procedure is the same at least up to the deviation matrix $\Delta X$ , $\Del
 \frac{1}{N} \sum_{i,j}^{N} [ R_{i}(t)-R_{i}(t_0)][ R_{j}(t)-R_{j}(t_0)] &= \frac{1}{N} \sum_{i,j}^{N} \Delta R_i(t) * \Delta R_j(t) \\ \\
 \Delta R_i(t)&=\sqrt{ \Delta X_{i}(t)^2 +\Delta Y_{i}(t)^2 + \Delta Z_{i}(t)^2} \\ \\
 \Delta R_i(t)*\Delta R_j(t)&=\sqrt{ [\Delta X_{i}(t)^2 +\Delta Y_{i}(t)^2 + \Delta Z_{i}(t)^2]*[\Delta X_{i}(t)^2 +\Delta Y_{i}(t)^2 + \Delta Z_{i}(t)^2]} \\
-&=\sqrt{ \Delta I*\Delta J} \\ \\
+&=\sqrt{ \Delta I*\Delta J} =\sqrt{ \Delta I}*\sqrt{\Delta J} \\ \\
 
 \frac{1}{N} \sum_{i,j}^{N} [ R_{i}(t)-R_{i}(t_0)][ R_{j}(t)-R_{j}(t_0)] &= \frac{1}{N} \sum_{i,j}^{N} \sqrt{ \Delta I*\Delta J}     \\
 \end{align}
