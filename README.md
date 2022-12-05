@@ -142,6 +142,7 @@ This algorithm give us the mean of single coordinates but this is not a problem 
 \end{align}
 ```
 
+this works as long as the single means are divided by the total number of possible ij combination $N$.
 
 ##### Cation-Anion $\boldsymbol{i \neq j}$
 The same procedure is done with the only exception that here all the product ij ($N_i*N_j$) need to be done compared with the cation-cation where the same ion product need to be excluded ${N\choose 2}$. So it's a bit more simple since the matrix multiplication ij is enough to probe all the deviation products.
