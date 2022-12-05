@@ -119,12 +119,9 @@ The procedure is the same at least up to the deviation matrix $\Delta X$ , $\Del
 
 ```math
 \begin{align}
-\frac{1}{N} \sum_{i,j}^{N} [ R_{i}(t)-R_{i}(t_0)][ R_{j}(t)-R_{j}(t_0)] &= \frac{1}{N} \sum_{i,j}^{N} \Delta R_i(t) * \Delta R_j(t) \\ \\
-\Delta R_i(t)&=\sqrt{ \Delta X_{i}(t)^2 +\Delta Y_{i}(t)^2 + \Delta Z_{i}(t)^2} \\ \\
-\Delta R_i(t)*\Delta R_j(t)&=\sqrt{ [\Delta X_{i}(t)^2 +\Delta Y_{i}(t)^2 + \Delta Z_{i}(t)^2]*[\Delta X_{i}(t)^2 +\Delta Y_{i}(t)^2 + \Delta Z_{i}(t)^2]} \\
-&=\sqrt{ \Delta I*\Delta J} =\sqrt{ \Delta I}*\sqrt{\Delta J} \\ \\
-
-\frac{1}{N} \sum_{i,j}^{N} [ R_{i}(t)-R_{i}(t_0)][ R_{j}(t)-R_{j}(t_0)] &= \frac{1}{N} \sum_{i,j}^{N} \sqrt{ \Delta I}*\sqrt{\Delta J}     \\
+\frac{1}{N} \sum_{i,j\,\, i\neq j}^{N} [ R_{i}(t)-R_{i}(t_0)][ R_{j}(t)-R_{j}(t_0)] &= \frac{1}{N} \sum_{i,j \,\, i\neq j}^{N} \Delta R_i(t) * \Delta R_j(t) \\ \\
+\Delta R_i(t)*\Delta R_j(t)&= \Delta X_{i}(t)*\Delta X_{j}(t) +\Delta Y_{i}(t)*\Delta Y_{j}(t) + \Delta Z_{i}(t)*\Delta Z_{i}(t) \\
+&=\Delta X_{i,j}(t)^2 + \Delta Y_{i,j}(t)^2 + \Delta Z_{i,j}(t)^2.  \\
 \end{align}
 ```
 
@@ -140,7 +137,18 @@ A.cumsum()-A&=[0\,,a_2\,,a_2+a_1]\\ \\
 \sum_{i\neq j}^3 a_i*a_j &=A*[A.cumsum()-A]_{inverted}^T= [a_0,a_1,a_2]\begin{bmatrix}a_1+a_2\\a_2\\0\end{bmatrix}
 \end{align}
 ```
-This granted $O(n)$ gaining a 100x speedup (now it takes around 0.02seconds for iteration)
+This granted $O(n)$ gaining a 100x speedup (now it takes around 0.02seconds for iteration).
+
+This algorithm give us the mean of single coordinates (  $\overline{\Delta X^2(t)}$  ) but this is not a problem because the two means are equivalent:
+
+```math
+\begin{align}
+\overline{\Delta R^2(t)} = \frac{1}{N} \sum_{i,j}^{N} \Delta R_{i,j}(t)^2 &= \frac{1}{N} [\sum_{i,j}^{N}   \Delta X_{i,j}(t)^2 +\Delta Y_{i,j}(t)^2 + \Delta Z_{i,j}(t)^2 ]\\
+&= \sum_{i,j}^{N}   [\frac{1}{N}\Delta X_{i,j}(t)^2 +\frac{1}{N}\Delta Y_{i,j}(t)^2 + \frac{1}{N}\Delta Z_{i,j}(t)^2 ]   \\
+&= \sum_{i,j}^{N}   \frac{1}{N}\Delta X_{i,j}(t)^2 +\sum_{i,j}^{N}\frac{1}{N}\Delta Y_{i,j}(t)^2 + \sum_{i,j}^{N}\frac{1}{N}\Delta Z_{i,j}(t)^2    \\
+&= \overline{\Delta X^2(t)}  +  \overline{\Delta Y^2(t)}  +  \overline{\Delta Z^2(t)}
+\end{align}
+```
 
 ##### Cation-Anion $\boldsymbol{i \neq j}$
 The same procedure is done with the only exception that here all the product ij ( $N_i*N_j$ ) need to be done compared with the cation-cation where the same ion product need to be excluded ${N\choose 2}$. So it's a bit more simple since the matrix multiplication ij is enough to probe all the deviation products.
