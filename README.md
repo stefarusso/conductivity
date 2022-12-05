@@ -97,9 +97,9 @@ from the deviation is possibile to calculate MSD which is linked to the self-dif
 ```math
 \begin{align}
 MSD(t)   = \frac{1}{N} \sum_{i}^{N} z_i^2 < [ R_i(t+\Delta t)-R_i(t) ]^2 >               &\qquad[6] \\ \\
-\Delta R_i(t) = (\Delta X_i(t)^2 +\Delta Y_i(t)^2 + \Delta Z_i(t)^2)^{\frac{1}{2}}      \\
+\Delta R_i(t) = [\Delta X_i(t) , \Delta Y_i(t) ,  \Delta Z_i(t) ]     \\ \\
 \Delta R_i(t)^2 = \Delta X_i(t)^2 +\Delta Y_i(t)^2 + \Delta Z_i(t)^2                    &\qquad[7]\\ \\
-MSD(t)=\frac{1}{N}*(\Delta X(t)^2+ \Delta Y(t)^2+\Delta Z(t)^2)    &\qquad[8] \\
+MSD(t)=\frac{1}{N}* \sum_{i}^{N} z_i^2 (\Delta X_i(t)^2+ \Delta Y_i(t)^2+\Delta Z_i(t)^2)    &\qquad[8] \\
 D_i=\lim_{t\to\infty}\frac{z_i^2\;MSD(t)}{6t}.    &\qquad[9]
 \end{align}
 ```
@@ -115,13 +115,13 @@ the program can reproduce the same results of Travis and VMD as you can see here
 This is the quantity where ionic liquids start to have deviations from neutral species. In water this quantity is close to zero because solutes dynamics are uncorrelated and is often ignored. In ionic liquids ionic couples can move togheter and the diffusion of single ion can be higher than expected if we don't take into account the correlated movements that happen with the other ions in the simulations.
 
 ##### Cation-Cation and Anion-Anion $\boldsymbol{i \neq j}$
-The procedure is the same at least up to the deviation matrix $\Delta X$ , $\Delta Y$ , $\Delta Z$ 
+The procedure is the same at least up to the deviation matrix $\Delta X$ , $\Delta Y$ , $\Delta Z$, but this time we cannot simplify the summation because we need all the terms $i \neq j$. 
 
 ```math
 \begin{align}
-\frac{1}{N} \sum_{i,j\,\, i\neq j}^{N} [ R_{i}(t)-R_{i}(t_0)][ R_{j}(t)-R_{j}(t_0)] &= \frac{1}{N} \sum_{i,j \,\, i\neq j}^{N} \Delta R_i(t) * \Delta R_j(t) \\ \\
+\frac{1}{N} \sum_{i,j\,\, i\neq j}^{N} [ R_{i}(t)-R_{i}(t_0)][ R_{j}(t)-R_{j}(t_0)] &= \frac{1}{N} \sum_{i,j \,\, i\neq j}^{N} \Delta R_i(t) * \Delta R_j(t) &\qquad[9]\\ \\
 \Delta R_i(t)*\Delta R_j(t)&= \Delta X_{i}(t)*\Delta X_{j}(t) +\Delta Y_{i}(t)*\Delta Y_{j}(t) + \Delta Z_{i}(t)*\Delta Z_{i}(t) \\
-&=\Delta X_{i,j}(t)^2 + \Delta Y_{i,j}(t)^2 + \Delta Z_{i,j}(t)^2.  \\
+&=\Delta X_{i,j}(t)^2 + \Delta Y_{i,j}(t)^2 + \Delta Z_{i,j}(t)^2.  &\qquad[10]\\
 \end{align}
 ```
 
@@ -130,11 +130,11 @@ It's possible to rearrange the double sum as a matrix multiplication and take ad
 
 ```math
 \begin{align}
-A&=[a_0,a_1,a_2] \\
-\sum_{i\neq j}^3 a_i * a_j & = a_0 a_1 + a_0 a_2 + a_1 a_2 \\  
-&=a_0(a_1+a_2)+a_1(a_2)+a_2*(0)\\ \\
-A.cumsum()-A&=[0\,,a_2\,,a_2+a_1]\\ \\
-\sum_{i\neq j}^3 a_i*a_j &=A*[A.cumsum()-A]_{inverted}^T= [a_0,a_1,a_2]\begin{bmatrix}a_1+a_2\\a_2\\0\end{bmatrix}
+A&=[a_0,a_1,a_2]  &\qquad[11]\\
+\sum_{i\neq j}^3 a_i * a_j & = a_0 a_1 + a_0 a_2 + a_1 a_2 & \\  
+&=a_0(a_1+a_2)+a_1(a_2)+a_2*(0)&\\ \\
+A.cumsum()-A&=[0\,,a_2\,,a_2+a_1] &\qquad[12]\\ \\
+\sum_{i\neq j}^3 a_i*a_j &=A*[A.cumsum()-A]_{inverted}^T= [a_0,a_1,a_2]\begin{bmatrix}a_1+a_2\\a_2\\0\end{bmatrix} &\qquad[13]
 \end{align}
 ```
 This granted $O(n)$ gaining a 100x speedup (now it takes around 0.02seconds for iteration).
@@ -143,10 +143,10 @@ This algorithm give us the mean of single coordinates (  $\overline{\Delta X^2(t
 
 ```math
 \begin{align}
-\overline{\Delta R^2(t)} = \frac{1}{N} \sum_{i,j}^{N} \Delta R_{i,j}(t)^2 &= \frac{1}{N} [\sum_{i,j}^{N}   \Delta X_{i,j}(t)^2 +\Delta Y_{i,j}(t)^2 + \Delta Z_{i,j}(t)^2 ]\\
-&= \sum_{i,j}^{N}   [\frac{1}{N}\Delta X_{i,j}(t)^2 +\frac{1}{N}\Delta Y_{i,j}(t)^2 + \frac{1}{N}\Delta Z_{i,j}(t)^2 ]   \\
-&= \sum_{i,j}^{N}   \frac{1}{N}\Delta X_{i,j}(t)^2 +\sum_{i,j}^{N}\frac{1}{N}\Delta Y_{i,j}(t)^2 + \sum_{i,j}^{N}\frac{1}{N}\Delta Z_{i,j}(t)^2    \\
-&= \overline{\Delta X^2(t)}  +  \overline{\Delta Y^2(t)}  +  \overline{\Delta Z^2(t)}
+\overline{\Delta R^2(t)} = \frac{1}{N} \sum_{i,j}^{N} \Delta R_{i,j}(t)^2 &= \frac{1}{N} [\sum_{i,j}^{N}   \Delta X_{i,j}(t)^2 +\Delta Y_{i,j}(t)^2 + \Delta Z_{i,j}(t)^2 ] &\qquad[14]\\
+&= \sum_{i,j}^{N}   [\frac{1}{N}\Delta X_{i,j}(t)^2 +\frac{1}{N}\Delta Y_{i,j}(t)^2 + \frac{1}{N}\Delta Z_{i,j}(t)^2 ]   &\qquad[15]\\
+&= \sum_{i,j}^{N}   \frac{1}{N}\Delta X_{i,j}(t)^2 +\sum_{i,j}^{N}\frac{1}{N}\Delta Y_{i,j}(t)^2 + \sum_{i,j}^{N}\frac{1}{N}\Delta Z_{i,j}(t)^2    &\qquad[16]\\
+&= \overline{\Delta X^2(t)}  +  \overline{\Delta Y^2(t)}  +  \overline{\Delta Z^2(t)} &\qquad[17]
 \end{align}
 ```
 
