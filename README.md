@@ -130,7 +130,7 @@ A.cumsum()-A&=[0\,,a_2\,,a_2+a_1]\\ \\
 ```
 This granted $O(n)$ gaining a 100x speedup (now it takes around 0.02seconds for iteration)
 
-This algorithm give us the mean of single coordinates but this is not a problem because the two means are equivalent:
+This algorithm give us the mean of single coordinates ( $\overline{\Delta X^2(t)}$ ) but this is not a problem because the two means are equivalent:
 
 ```math
 \begin{align}
