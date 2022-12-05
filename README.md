@@ -115,8 +115,20 @@ the program can reproduce the same results of Travis and VMD as you can see here
 This is the quantity where ionic liquids start to have deviations from neutral species. In water this quantity is close to zero because solutes dynamics are uncorrelated and is often ignored. In ionic liquids ionic couples can move togheter and the diffusion of single ion can be higher than expected if we don't take into account the correlated movements that happen with the other ions in the simulations.
 
 ##### Cation-Cation and Anion-Anion $\boldsymbol{i \neq j}$
+The procedure is the same at least up to the deviation matrix $\Delta X$ , $\Delta Y$ , $\Delta Z$ 
 
-the procedure is the same at least up to the deviation matrix $\Delta X$ , $\Delta Y$ , $\Delta Z$ . This time there is the need of a  two nested loops over the ions. This make the double sum over products really slow  $O(n^2)$  because there are  ${N\choose 2}=\frac{N!}{2(N-2)!}$ unique combinations to sum over. One full iteration of two loops can take up to 6seconds in the worst case, since this sum has to be repeated over all the sub-sumple of frames (can be quite big 1000-100000) it's unrealistically too slow.
+```math
+\begin{align}
+\frac{1}{N} \sum_{i,j}^{N} [ R_{i}(t)-R_{i}(t_0)][ R_{j}(t)-R_{j}(t_0)] &= \frac{1}{N} \sum_{i,j}^{N} \Delta R_i(t) * \Delta R_j(t) \\ \\
+\Delta R_i(t)&=\sqrt{ \Delta X_{i}(t)^2 +\Delta Y_{i}(t)^2 + \Delta Z_{i}(t)^2} \\ \\
+\Delta R_i(t)*\Delta R_j(t)&=\sqrt{ [\Delta X_{i}(t)^2 +\Delta Y_{i}(t)^2 + \Delta Z_{i}(t)^2]*[\Delta X_{i}(t)^2 +\Delta Y_{i}(t)^2 + \Delta Z_{i}(t)^2]} \\
+&=\sqrt{ \Delta I*\Delta J} =\sqrt{ \Delta I}*\sqrt{\Delta J} \\ \\
+
+\frac{1}{N} \sum_{i,j}^{N} [ R_{i}(t)-R_{i}(t_0)][ R_{j}(t)-R_{j}(t_0)] &= \frac{1}{N} \sum_{i,j}^{N} \sqrt{ \Delta I}*\sqrt{\Delta J}     \\
+\end{align}
+```
+
+This time there is the need of a two nested loops over the ions i-j. This make the double sum over products really slow  $O(n^2)$  because there are  ${N\choose 2}=\frac{N!}{2(N-2)!}$ unique combinations to sum over. One full iteration of two loops can take up to 6seconds in the worst case, since this sum has to be repeated over all the sub-sumple of frames (can be quite big 1000-100000) it's unrealistically too slow.
 It's possible to rearrange the double sum as a matrix multiplication and take advantage of the processor efficency of numpy. Here you can see the procedure in a simple 3x1 array, in the program this has being extended in 2D:
 
 ```math
@@ -130,18 +142,5 @@ A.cumsum()-A&=[0\,,a_2\,,a_2+a_1]\\ \\
 ```
 This granted $O(n)$ gaining a 100x speedup (now it takes around 0.02seconds for iteration)
 
-This algorithm give us the mean of single coordinates but this is not a problem because the two means are equivalent:
-
-```math
-\begin{align}
-\overline{\Delta R^2(t)} = \frac{1}{N} \sum_{i,j}^{N} \Delta R_{i,j}(t)^2 &= \frac{1}{N} \sum_{i,j}^{N} (\,\,\sqrt{    \Delta X_{i,j}(t)^2 +\Delta Y_{i,j}(t)^2 + \Delta Z_{i,j}(t)^2     }\,\,)^2 \\
-&= \frac{1}{N} [\sum_{i,j}^{N}   \Delta X_{i,j}(t)^2 +\Delta Y_{i,j}(t)^2 + \Delta Z_{i,j}(t)^2 ]   \\
-&= \sum_{i,j}^{N}   [\frac{1}{N}\Delta X_{i,j}(t)^2 +\frac{1}{N}\Delta Y_{i,j}(t)^2 + \frac{1}{N}\Delta Z_{i,j}(t)^2 ]   \\
-&= \sum_{i,j}^{N}   \frac{1}{N}\Delta X_{i,j}(t)^2 +\sum_{i,j}^{N}\frac{1}{N}\Delta Y_{i,j}(t)^2 + \sum_{i,j}^{N}\frac{1}{N}\Delta Z_{i,j}(t)^2    \\
-&= \overline{\Delta X^2(t)}  +  \overline{\Delta Y^2(t)}  +  \overline{\Delta Z^2(t)}
-\end{align}
-```
-
-
 ##### Cation-Anion $\boldsymbol{i \neq j}$
-The same procedure is done with the only exception that here all the product ij ($N_i*N_j$) need to be done compared with the cation-cation where the same ion product need to be excluded ${N\choose 2}$. So it's a bit more simple since the matrix multiplication ij is enough to probe all the deviation products.
+The same procedure is done with the only exception that here all the product ij ( $N_i*N_j$ ) need to be done compared with the cation-cation where the same ion product need to be excluded ${N\choose 2}$. So it's a bit more simple since the matrix multiplication ij is enough to probe all the deviation products.
