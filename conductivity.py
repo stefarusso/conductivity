@@ -426,8 +426,16 @@ def DISTANCE_get_interdiffusion_msd(x,y,z,depth=0.3,cation_anion_idx=None):
 	return msd
 
 if __name__ == "__main__":
+	#TESTING
+	travis_data=pd.read_csv("../test/lys/lys_c_travis.csv",sep='; ',header=0,engine='python')
+	travis_data.columns = ['t', 'msd', 'derivative']
+	vmd_data_c=pd.read_csv("../test/lys/vmd_c.dat",sep=' ',header=None)
+	vmd_data_c.columns = ['t', 'msd']
+	vmd_data_c.t=vmd_data_c.t*1e3
+	vmd_data_c.msd=vmd_data_c.msd*1e4
+	filename='../test/lys/lys_100.xyz'
+	dt=0.1
 	x,y,z,q,cation_idx,anion_idx=load_trajectory(filename)
-
 	#SELFDIFFUSION
 	# CATION
 	msd_self_1=get_selfdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.70)
