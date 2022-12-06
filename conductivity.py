@@ -6,14 +6,6 @@ import pandas as pd
 import scipy
 import time
 
-#Trajectory file FROM USER INPUT
-#file='test/40_out.xyz'
-filename='../test/lys/lys_100.xyz'
-
-
-#time step in picoseconds FROM USER INPUT
-dt=0.1
-
 class End_of_Loop(Exception): pass #To being able of closing the loop outside the loop functions
 
 def read_line(f):  
@@ -52,26 +44,13 @@ def process_frame(trajectory_file_object):
 
 
 
-#-------------------------------------------------
-#DATA
-travis_data=pd.read_csv("../test/lys/lys_c_travis.csv",sep='; ',header=0,engine='python')
-travis_data.columns = ['t', 'msd', 'derivative']
-#travis_data_a=pd.read_csv("../test/lys/lys_a_travis.csv",sep='; ',header=0,engine='python')
-#travis_data_a.columns = ['t', 'msd', 'derivative']
-vmd_data_c=pd.read_csv("../test/lys/vmd_c.dat",sep=' ',header=None)
-vmd_data_c.columns = ['t', 'msd']
-#vmd_data_a=pd.read_csv("../test/lys/vmd_a.dat",sep=' ',header=None)
-#vmd_data_a.columns = ['t', 'msd']
-#vmd_data_a.t=vmd_data_a.t*1e3
-#vmd_data_a.msd=vmd_data_a.msd*1e4
-vmd_data_c.t=vmd_data_c.t*1e3
-vmd_data_c.msd=vmd_data_c.msd*1e4
-#DATA 
-#----------------------------
 
 
 def load_trajectory(filename):
 	#TRAJECTORY LOADING
+	if 'dt' not in globals():
+		global dt
+		dt=float(input("Input the physical time-step in ps : "))
 	try:
 		with open(filename,'r') as trajectory_file_object:
 			q,x,y,z=[],[],[],[]
@@ -122,15 +101,18 @@ def regression(msd,t,scaling=0.3):
 	msd_subset=msd[idx:]
 	#LINEAR REGRESSION
 	model_c = LinearRegression().fit(t_pred,msd_subset)
+	slope=model_c.coef_
+	D=model_c.coef_/6
+	intercept=model_c.intercept_
 	print("LINEAR REGRESSION ON THE LAST ",100-scaling*100," %")
 	print(f"slope : {model_c.coef_} ")
 	print(f"Intercept: {model_c.intercept_} ")
 	print(f"D : {model_c.coef_/6} pm^2/ps")
 	#generate msd_predition point for plotting with the same spacing and interval of t_prediction
 	msd_pred = model_c.predict(t_pred)
-	return msd_pred, t_pred
+	return [msd_pred,t_pred],[slope,intercept]
 
-def get_t(msd,dt):
+def get_t(msd):
 	#create the proper time vector
 	return np.arange(0,msd.shape[0]*dt,dt)
 
@@ -201,6 +183,59 @@ def get_selfdiffusion_msd(x,y,z,depth=0.3):
 	#MSD MEAN OVER TOTAL NUMBER OF INTERVALS
 	msd=msd/count
 	return msd
+
+
+################################### IF WE USE DISTANCE R*R= (sqrt(X1^2 +Y^2+ Z^2))^2
+#i!=j Cation-Cation and Anion-Anion
+def DISTANCE_interdiffusion_same_product(dx,dy,dz):
+	#i!=j Cation-Cation or Anion,Anion
+	#
+	#it take dx dy and dz each with dimension [N_frame,N_molecules]
+	#get the distance DeltaR and make the product DR_i*DR_j=DR^2
+	#the product is mediated over uniques combinations (binomial coefficient)
+	
+	#bin_coeff is the total number of unique products
+	#it is required to mediate over all the possible unique combinations
+	dr2=np.multiply(dx,dx)+np.multiply(dy,dy)+np.multiply(dz,dz)
+	dr=np.sqrt(dr2)
+
+	bin_coeff=scipy.special.comb(dx.shape[1],2,exact=True)
+
+	dr_cs=dr[:,::-1].cumsum(axis=1)[:,::-1]-dr
+	dr=np.einsum('ij,ji->i',dr,dr_cs.T)/bin_coeff
+	unit_conversion=1e4
+	dr=dr*unit_conversion
+	return dr
+
+
+def DISTANCE_inter_product(delta1,delta2):
+	#product function for inter ions inter-diffusion 
+	#cation_i-anion_j with al possible product ij (N_i*N_j possibilities) 
+	tot_number_combination=delta1.shape[1]*delta2.shape[1]
+	#create a matrix [NxF] with N times repeated the array of summation over N molecules (axis 1) 
+	delta1=np.tile(np.sum(delta1,axis=1),(delta2.shape[1],1))
+	#we need only the diagonal component of the matrix multiplication
+	delta_square=np.einsum('ij,ji->i',delta2,delta1)
+	#mediated over total number combination N_cations*N_anions
+	delta_square=delta_square/tot_number_combination
+	return delta_square
+
+
+def DISTANCE_interdiffusion_inter_product(dx,dy,dz,cation_anion_idx):
+	#i!=j Cation-Anion
+	#
+	#it require the index of cations and anions for selecting the right subdata from dx dy and dz
+	#it calculate the sum of all possible product ij, where i=cations and j=anions	
+	cation_idx,anion_idx = cation_anion_idx
+	#single coordinates already mediated over the total number of products (N_cations * N_anions)
+	dr2=np.multiply(dx,dx)+np.multiply(dy,dy)+np.multiply(dz,dz)
+	dr=np.sqrt(dr2)
+	dr=DISTANCE_inter_product(dr[:,cation_idx[0]],dr[:,anion_idx[0]])
+	unit_conversion=1e4
+	dr=dr*unit_conversion
+	return dr
+
+
 
 #################################### IF WE USE PRODUCT R*R=X1*X2+Y1*Y2+Z1*Z2)
 
@@ -345,59 +380,6 @@ def get_collective_msd(x,y,z,depth=0.3):
 	msd=msd/count
 	return msd
 
-
-#################################### IF WE USE DISTANCE R=sqrt(X^2+Y^2+Z^2)
-
-
-#i!=j Cation-Cation and Anion-Anion
-def DISTANCE_interdiffusion_same_product(dx,dy,dz):
-	#i!=j Cation-Cation or Anion,Anion
-	#
-	#it take dx dy and dz each with dimension [N_frame,N_molecules]
-	#get the distance DeltaR and make the product DR_i*DR_j=DR^2
-	#the product is mediated over uniques combinations (binomial coefficient)
-	
-	#bin_coeff is the total number of unique products
-	#it is required to mediate over all the possible unique combinations
-	dr2=np.multiply(dx,dx)+np.multiply(dy,dy)+np.multiply(dz,dz)
-	dr=np.sqrt(dr2)
-
-	bin_coeff=scipy.special.comb(dx.shape[1],2,exact=True)
-
-	dr_cs=dr[:,::-1].cumsum(axis=1)[:,::-1]-dr
-	dr=np.einsum('ij,ji->i',dr,dr_cs.T)/bin_coeff
-	unit_conversion=1e4
-	dr=dr*unit_conversion
-	return dr
-
-
-def DISTANCE_inter_product(delta1,delta2):
-	#product function for inter ions inter-diffusion 
-	#cation_i-anion_j with al possible product ij (N_i*N_j possibilities) 
-	tot_number_combination=delta1.shape[1]*delta2.shape[1]
-	#create a matrix [NxF] with N times repeated the array of summation over N molecules (axis 1) 
-	delta1=np.tile(np.sum(delta1,axis=1),(delta2.shape[1],1))
-	#we need only the diagonal component of the matrix multiplication
-	delta_square=np.einsum('ij,ji->i',delta2,delta1)
-	#mediated over total number combination N_cations*N_anions
-	delta_square=delta_square/tot_number_combination
-	return delta_square
-
-
-def DISTANCE_interdiffusion_inter_product(dx,dy,dz,cation_anion_idx):
-	#i!=j Cation-Anion
-	#
-	#it require the index of cations and anions for selecting the right subdata from dx dy and dz
-	#it calculate the sum of all possible product ij, where i=cations and j=anions	
-	cation_idx,anion_idx = cation_anion_idx
-	#single coordinates already mediated over the total number of products (N_cations * N_anions)
-	dr2=np.multiply(dx,dx)+np.multiply(dy,dy)+np.multiply(dz,dz)
-	dr=np.sqrt(dr2)
-	dr=DISTANCE_inter_product(dr[:,cation_idx[0]],dr[:,anion_idx[0]])
-	unit_conversion=1e4
-	dr=dr*unit_conversion
-	return dr
-
 #INTERDIFFUSION WHERE i!=j
 #two possible cases :
 #-same ion type Cation-Cation and Anion-Anion
@@ -443,111 +425,51 @@ def DISTANCE_get_interdiffusion_msd(x,y,z,depth=0.3,cation_anion_idx=None):
 	msd=msd/count
 	return msd
 
+if __name__ == "__main__":
+	x,y,z,q,cation_idx,anion_idx=load_trajectory(filename)
 
+	#SELFDIFFUSION
+	# CATION
+	msd_self_1=get_selfdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.70)
+	t=get_t(msd_self_1,dt)
+	# ANION
+	msd_self_2=get_selfdiffusion_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.70)
 
+	# #INTERDIFFUSION same ion : cation-cation and anion-anion
+	msd_inter_1 = get_interdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.7)
+	msd_inter_2 = get_interdiffusion_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.7)
 
+	# # #INTER-IONS  <-----
+	msd_inter_inter = get_interdiffusion_msd(x,y,z,depth=0.7,cation_anion_idx=[cation_idx,anion_idx])
 
+	# #COLLECTIVE  <-----
+	msd_collective = get_collective_msd(x,y,z,depth=0.7)
 
-
-
-
-
-x,y,z,q,cation_idx,anion_idx=load_trajectory(filename)
-
-#SELFDIFFUSION
-
-# print("-----------------------")
-# print("Cation Self-diffusion   ")
-# print("-----------------------")
-
-msd_self_1=get_selfdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.70)
-# fig, ax = plt.subplots()
-t=get_t(msd_self_1,dt)
-# msd_self_1_pred,t_pred = regression(msd_self_1,t)
-
-
-# ax.plot(t,msd1,linewidth=1.3,label=r'msd',color='red',zorder=2)
-# ax.plot(t_pred,msd1_pred,label='linear regression',linewidth=1,linestyle='dashed',color='blue',zorder=3)
-# ax.plot(travis_data.t,travis_data.msd,label='vmd',linewidth=1,linestyle='dashed',color='red',zorder=3)
-# ax.plot(vmd_data_c.t,vmd_data_c.msd,label='travis',linewidth=1,linestyle='dashed',color='green',zorder=3)
-# ax.legend()
-# ax.set_xlabel(r'time / ps')
-# ax.set_ylabel(r'MSD / pm^2')
-# ax.set_box_aspect(1)
-# fig.suptitle("Cation self-diffusion MSD")
-# plt.show()
-
-# print("-----------------------") 
-# print("Anion Self-diffusion   ")
-# print("-----------------------")
-msd_self_2=get_selfdiffusion_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.70)
-# msd_self_2_pred,t2_pred = regression(msd_self_1,t)
-#plotting([msd1],"cation_selfdiffusion.csv")
-# plotting([msd2],"anion_selfdiffusion.csv")
-
-
-
-# #INTERDIFFUSION cation-cation and anion-anion
-msd_inter_1 = get_interdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.7)
-msd_inter_2 = get_interdiffusion_msd(x[:,anion_idx[0]],y[:,anion_idx[0]],z[:,anion_idx[0]],depth=0.7)
-
-
-# fig, ax = plt.subplots(1,2)
-# t=get_t(msd1,dt)
-# msd1_pred,t_pred = regression(msd1,t)
-# ax[0].plot(t,msd1,linewidth=1.3,label=r'msd',color='red',zorder=2)
-# ax[0].plot(t_pred,msd1_pred,label='linear regression',linewidth=1,linestyle='dashed',color='blue',zorder=3)
-# ax[0].legend()
-# ax[0].set_xlabel(r'time / ps')
-# ax[0].set_ylabel(r'MSD / pm^2')
-# ax[0].set_box_aspect(1)
-# msd2_pred,t_pred = regression(msd2,t)
-# ax[1].plot(t,msd2,linewidth=1.3,label=r'msd',color='red',zorder=2)
-# ax[1].plot(t_pred,msd2_pred,label='linear regression',linewidth=1,linestyle='dashed',color='blue',zorder=3)
-# ax[1].legend()
-# ax[1].set_xlabel(r'time / ps')
-# ax[1].set_ylabel(r'MSD / pm^2')
-# ax[1].set_box_aspect(1)
-# #pd.DataFrame({"t":t,"msd":msd}).to_csv(filename,header=["t","msd"],index=None)
-# fig.suptitle("Cation and Anion inter-diffusion MSD")
-# plt.show()
-
-
-# # #INTER-IONS  <-----
-msd_inter_inter = get_interdiffusion_msd(x,y,z,depth=0.7,cation_anion_idx=[cation_idx,anion_idx])
-
-# fig, ax = plt.subplots()
-# t=get_t(msd1,dt)
-# msd1_pred,t_pred = regression(msd1,t)
-# ax.plot(t,msd1,linewidth=1.3,label=r'msd',color='red',zorder=2)
-# ax.plot(t_pred,msd1_pred,label='linear regression',linewidth=1,linestyle='dashed',color='blue',zorder=3)
-# ax.legend()
-# ax.set_xlabel(r'time / ps')
-# ax.set_ylabel(r'MSD / pm^2')
-# ax.set_box_aspect(1)
-# #pd.DataFrame({"t":t,"msd":msd}).to_csv(filename,header=["t","msd"],index=None)
-# fig.suptitle("Cation and Anion inter-diffusion MSD")
-# plt.show()
-
-
-
-
-# #COLLECTIVE  <-----
-msd_collective = get_collective_msd(x,y,z,depth=0.7)
-
-fig, ax = plt.subplots()
-msd_collective_pred,t_coll_pred = regression(msd_collective,t)
-ax.plot(t,msd_collective,linewidth=1.3,label=r'msd_coll',color='red',zorder=2)
-ax.plot(t_coll_pred,msd_collective_pred,label='linear regression',linewidth=1,linestyle='dashed',color='black',zorder=3)
-ax.plot(t,msd_self_1,linewidth=1.3,label=r'msd_self_cation',color='blue',zorder=2)
-ax.plot(t,msd_self_2,linewidth=1.3,label=r'msd_self_anion',color='green',zorder=2)
-ax.plot(t,msd_inter_1,linewidth=1.3,label=r'msd_cation-cation',color='purle',zorder=2)
-ax.plot(t,msd_inter_2,linewidth=1.3,label=r'msd_anion-anion',color='grey',zorder=2)
-ax.plot(t,msd_inter_inter,linewidth=1.3,label=r'msd_cation-anion',color='orange',zorder=2)
-ax.legend()
-ax.set_xlabel(r'time / ps')
-ax.set_ylabel(r'MSD / pm^2')
-ax.set_box_aspect(1)
-#pd.DataFrame({"t":t,"msd":msd}).to_csv(filename,header=["t","msd"],index=None)
-fig.suptitle("Cation and Anion inter-diffusion MSD")
-plt.show()
+	fig, ax = plt.subplots()
+	[msd_collective_pred,t_coll_pred],[slope,intercept] = regression(msd_collective,t)
+	ax.plot(t,msd_self_1,linewidth=1.3,label=r'msd_self_cation',color='blue',zorder=2)
+	ax.plot(t,msd_self_2,linewidth=1.3,label=r'msd_self_anion',color='green',zorder=2)
+	ax.plot(t,msd_inter_1,linewidth=1.3,label=r'msd_cation-cation',color='purple',zorder=2)
+	ax.plot(t,msd_inter_2,linewidth=1.3,label=r'msd_anion-anion',color='grey',zorder=2)
+	ax.plot(t,msd_inter_inter,linewidth=1.3,label=r'msd_cation-anion',color='orange',zorder=2)
+	ax.plot(t,msd_collective,linewidth=1.3,label=r'msd_coll',color='red',zorder=2)
+	ax.plot(t_coll_pred,msd_collective_pred,label=f'linear regression, y=x {slope}  +({intercept}) pm^2/ps \n D: {slope/6} ',linewidth=1,linestyle='dashed',color='black',zorder=3)
+	ax.legend()
+	ax.set_xlabel(r'time / ps')
+	ax.set_ylabel(r'MSD / pm^2')
+	ax.set_box_aspect(1)
+	#pd.DataFrame({"t":t,"msd":msd}).to_csv(filename,header=["t","msd"],index=None)
+	fig.suptitle("Cation and Anion inter-diffusion MSD")
+	plt.show()
+else:
+	print("Usable Packages: ")
+	print("x,y,z,q,cation_index,anion_index = conductivity.load_trajectory(\"filename\")")
+	print("SELFDIFFUSION MSD::")
+	print("msd = conductivity.get_selfdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.70)")
+	print("COLLECTIVE MSD:")
+	print("msd_collective = conductivity.get_collective_msd(x,y,z,depth=0.7)")
+	print("REGRESSION:")
+	print("t = get_t(msd,dt)")
+	print("msd_prediction,t_predtion = conductivity.regression(msd,t)")
+	print("PLOTTING:")
+	print("conductivity.plotting([msd1,msd2])")
