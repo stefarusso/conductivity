@@ -42,8 +42,62 @@ $charge, \qquad X_{coord}, \qquad Y_{coord}, \qquad Z_{coord} $.
 -1    -22.58886859  -28.62449835   14.05828311
 ```
 
+### TRAVIS pre-process
+
+<pre>
+! Use the advanced mode until the analysis selection menu (y/n)? [no] 
+! Are the 3 cell vectors of the same size (yes/no)? [yes] 
+! Enter length of cell vector in pm: <b> 7080 </b>
+! Create images of the structural formulas (y/n)? [no] 
+! Accept these molecules (y) or change something (n)? [yes]  
+
+! Which functions to compute (comma separated)? <b> proc </b>
+! Use the advanced mode for the main part (y/n)? [no] <b> y </b>
+
+! Write also virtual atoms (center of mass, ...) (y/n)? [no] <b> y </b>
+! Ref.Env.: Use alias names (instead of #) for virtual atoms (y/n)? [no] 
+! Remove angular momentum from trajectory (y/n)? [no] 
+! Put the center of the system to (0|0|0) (0), to (x/2|y/2|z/2) (1), or leave coords unchanged (2)? [1] <b> 0 </b> 
+! Put a specific atom into the box center (y/n)? [no]
+! Save all atoms in the system (y/n)? [yes] <b> n </b>
+
+! Save (some/all) atoms from molecule C6H8N3O2 (y/n)? [yes] 
+! Which atoms to save from C6H8N3O2 (e.g. "C1,C3-5,H")? [all] <b> #2 </b>
+
+! Save (some/all) atoms from molecule C5H14NO (y/n)? [yes] 
+! Which atoms to save from C5H14NO (e.g. "C1,C3-5,H")? [all] <b> #2 </b>
+
+! Try to unwrap the trajectory (y/n)? [no] <b> y </b>
+! Sort output coordinates by molecules (0) or by element types (1)? [0] 
+
+! Change atom labels of some atoms in output trajectory (y/n)? [no] <b> y </b>
+! - Change some labels in molecule 1 (C6H8N3O2) (y/n)? [no] <b> y </b>
+! Which atoms to relabel in C6H8N3O2 (e.g. "C1,C3-5,H")? [done]<b> #2 </b>
+! Enter output element label for these atoms: <b> -1 </b>
+! Which atoms to relabel in C6H8N3O2 (e.g. "C1,C3-5,H")? [done]
+! - Change some labels in molecule 2 (C5H14NO) (y/n)? [no] <b> y </b>
+! Which atoms to relabel in C5H14NO (e.g. "C1,C3-5,H")? [done]<b> #2 </b>
+! Enter output element label for these atoms: <b> 1 </b>
+! Which atoms to relabel in C5H14NO (e.g. "C1,C3-5,H")? [done]
+
+! Write comments (atom label and molecule) behind each line in output trajectory (y/n)? [no] 
+! Create a shell script for resorting other XYZ files (e.g., velocity/force trajectories) (y/n)? [no] 
+! Write the cell geometry to the XYZ comment line (y/n)? [no] 
+! Split the trajectory into parts (y/n)? [no] 
+! Add a mesh of atoms to the saved trajectory (y/n)? [no] 
+! Select frames to store according to a pattern (y/n)? [no] 
+! Remove center of mass movement of the box (y/n)? [no] <b> y </b>
+! Fix com of whole system (y) or a specified center/atom (n)? [yes] 
+! Perform a multi-interval analysis (y/n)? [no] 
+! In which trajectory frame to start processing the trajectory? [1] 
+! How many trajectory frames to read (from this position on)? [all] 
+! Use every n-th read trajectory frame for the analysis: [1] 
+</pre>
+
+
 #### Usage
-python cond.py input.xyz
+import conductivity
+
 
 ## How it works
 #### Self-diffusion $\boldsymbol{\sigma_i}$ (i=j)
