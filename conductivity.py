@@ -122,7 +122,7 @@ def plotting(msd_list,filename='msd.csv'):
 	# !!!! require a list of msd_list = [msd_cation,msd_anion] !!!!
 	fig, ax = plt.subplots(1,2)
 	for i,msd in enumerate(msd_list):
-		t=get_t(msd,dt)
+		t=get_t(msd)
 		msd_pred,t_pred = regression(msd,t)
 		ax[i].plot(t,msd,linewidth=1.3,label=r'msd',color='red',zorder=2)
 		ax[i].plot(t_pred,msd_pred,label='linear regression',linewidth=1,linestyle='dashed',color='blue',zorder=3)
@@ -477,7 +477,7 @@ else:
 	print("COLLECTIVE MSD:")
 	print("msd_collective = conductivity.get_collective_msd(x,y,z,depth=0.7)")
 	print("REGRESSION:")
-	print("t = get_t(msd,dt)")
+	print("t = get_t(msd)")
 	print("msd_prediction,t_predtion = conductivity.regression(msd,t)")
 	print("PLOTTING:")
 	print("conductivity.plotting([msd1,msd2])")
