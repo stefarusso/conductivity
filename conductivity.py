@@ -426,34 +426,47 @@ def DISTANCE_get_interdiffusion_msd(x,y,z,depth=0.3,cation_anion_idx=None):
 	return msd
 
 
+def load_csv():
+	t = inter_1 = pd.read_csv("inter1.csv")["t"].to_numpy()
+	inter1 = pd.read_csv("inter1.csv")["msd"].to_numpy()	
+	inter2 = pd.read_csv("inter2.csv")["msd"].to_numpy()
+	inter_inter = pd.read_csv("inter_inter.csv")["msd"].to_numpy()
+	cat = pd.read_csv("cat.csv")["msd"].to_numpy()
+	ani = pd.read_csv("ani.csv")["msd"].to_numpy()
+	return t, cat, ani, inter1, inter2, inter_inter 
 
-def all(filename):
-	#loading
-	x,y,z,q,cation_index,anion_index = load_trajectory(filename)
-	print("_________INTER CAT-CAT MSD________ ")
-	# #INTERDIFFUSION same ion : cation-cation and anion-anion
-	inter_1 = get_interdiffusion_msd(x[:,cation_index[0]],y[:,cation_index[0]],z[:,cation_index[0]],depth=0.7)
-	t = get_t(inter_1)
-	pd.DataFrame({"t":t,"msd":inter_1}).to_csv("inter1.csv",header=["t","msd"],index=None)
-	print("_________INTER ANI-ANI MSD________ ")
-	inter_2 = get_interdiffusion_msd(x[:,anion_index[0]],y[:,anion_index[0]],z[:,anion_index[0]],depth=0.7)
-	pd.DataFrame({"t":t,"msd":inter_2}).to_csv("inter2.csv",header=["t","msd"],index=None)
-	#INTER-IONS
-	print("_________INTER-INTER CAT-ANI MSD________")
-	inter_inter = get_interdiffusion_msd(x,y,z,depth=0.7,cation_anion_idx=[cation_index,anion_index])
-	pd.DataFrame({"t":t,"msd":inter_inter}).to_csv("inter_inter.csv",header=["t","msd"],index=None)
+def all(filename,checkpoint=False):
+	#in case msd already calculated
+	if checkpoint:
+		t, cat, ani, inter1, inter2, inter_inter = load_csv()
+	else:
+		#loading
+		x,y,z,q,cation_index,anion_index = load_trajectory(filename)
+		print("_________INTER CAT-CAT MSD________ ")
+		# #INTERDIFFUSION same ion : cation-cation and anion-anion
+		inter1 = get_interdiffusion_msd(x[:,cation_index[0]],y[:,cation_index[0]],z[:,cation_index[0]],depth=0.7)
+		t = get_t(inter1)
+		pd.DataFrame({"t":t,"msd":inter_1}).to_csv("inter1.csv",header=["t","msd"],index=None)
+		print("_________INTER ANI-ANI MSD________ ")
+		inter2 = get_interdiffusion_msd(x[:,anion_index[0]],y[:,anion_index[0]],z[:,anion_index[0]],depth=0.7)
+		pd.DataFrame({"t":t,"msd":inter2}).to_csv("inter2.csv",header=["t","msd"],index=None)
+		#INTER-IONS
+		print("_________INTER-INTER CAT-ANI MSD________")
+		inter_inter = get_interdiffusion_msd(x,y,z,depth=0.7,cation_anion_idx=[cation_index,anion_index])
+		pd.DataFrame({"t":t,"msd":inter_inter}).to_csv("inter_inter.csv",header=["t","msd"],index=None)
+		
+		print("_________SELF-Cation MSD________ ")
+		cat = get_selfdiffusion_msd(x[:,cation_index[0]],y[:,cation_index[0]],z[:,cation_index[0]],depth=0.70)
+		pd.DataFrame({"t":t,"msd":cat}).to_csv("cat.csv",header=["t","msd"],index=None)
+		print("_________SELF-anion MSD________ ")
+		ani = get_selfdiffusion_msd(x[:,anion_index[0]],y[:,anion_index[0]],z[:,anion_index[0]],depth=0.70)
+		pd.DataFrame({"t":t,"msd":ani}).to_csv("ani.csv",header=["t","msd"],index=None)
 	
-	print("_________SELF-Cation MSD________ ")
-	cation = get_selfdiffusion_msd(x[:,cation_index[0]],y[:,cation_index[0]],z[:,cation_index[0]],depth=0.70)
-	pd.DataFrame({"t":t,"msd":cation}).to_csv("cat.csv",header=["t","msd"],index=None)
-	print("_________SELF-anion MSD________ ")
-	anion = get_selfdiffusion_msd(x[:,anion_index[0]],y[:,anion_index[0]],z[:,anion_index[0]],depth=0.70)
-	pd.DataFrame({"t":t,"msd":anion}).to_csv("anion.csv",header=["t","msd"],index=None)
-	
+	#REGRESSIONS	
 	print("CATION REGRESSION:")
-	[pred_1,t_1],[slope_1,intercept_1] = regression(cation,t,scaling=0.3)
+	[pred_1,t_1],[slope_1,intercept_1] = regression(cat,t,scaling=0.3)
 	print("Anion REGRESSION:")
-	[pred_2,t_2],[slope_2,intercept_2] = regression(anion,t,scaling=0.3)
+	[pred_2,t_2],[slope_2,intercept_2] = regression(ani,t,scaling=0.3)
 	
 	print("Inter1 REGRESSION:")
 	[pred_3,t_3],[slope_3,intercept_3] = regression(inter1,t,scaling=0.3)
@@ -462,33 +475,29 @@ def all(filename):
 	print("Inter_inter REGRESSION:")
 	[pred_5,t_5],[slope_5,intercept_5] = regression(inter_inter,t,scaling=0.3)
 	
-	tot_coll=cation+anion+inter1+inter2+inter_inter	
-	print("SUM cat+anion+inter1+inter2+inter_inter REGRESSION:")
+	tot_coll=cat+ani+inter1+inter2+inter_inter	
+	print("SUM cation+anion+cat_cat+anion_anion+cation_anion REGRESSION:")
 	[pred_6,t_6],[slope_6,intercept_6] = regression(tot_coll,t,scaling=0.3)
 	
 	fig, ax = plt.subplots()
-	ax.plot(t,cation,linewidth=1.3,label=r'msd cation',color='blue',zorder=2)
+	ax.plot(t,cat,linewidth=1.3,label=r'msd cation',color='blue',zorder=2)
 	ax.plot(t_1,pred_1,label=f'linear regression, y=x {slope_1}  +({intercept_1}) pm^2/ps \n D: {slope_1/6} ',linewidth=1,linestyle='dashed',color='blue',zorder=3)
-	ax.plot(t,anion,linewidth=1.3,label=r'msd anion',color='green',zorder=2)
+	ax.plot(t,ani,linewidth=1.3,label=r'msd anion',color='green',zorder=2)
 	ax.plot(t_2,pred_2,label=f'linear regression, y=x {slope_2}  +({intercept_2}) pm^2/ps \n D: {slope_2/6} ',linewidth=1,linestyle='dashed',color='green',zorder=3)
 	ax.plot(t,tot_coll,linewidth=1.3,label=r'msd sum',color='purple',zorder=2)
 	ax.plot(t_6,pred_6,label=f'linear regression, y=x {slope_6}  +({intercept_6}) pm^2/ps \n D: {slope_6/6} ',linewidth=1,linestyle='dashed',color='purple',zorder=3)
-	ax.plot(t,inter_1,linewidth=1.3,label=r'msd cation-cation',color='brown',zorder=2)
-        ax.plot(t_3,pred_3,label=f'linear regression, y=x {slope_3}  +({intercept_3}) pm^2/ps \n D: {slope_3/6} ',linewidth=1,linestyle='dashed',color='brown',zorder=3)
-	ax.plot(t,inter_2,linewidth=1.3,label=r'msd anion-anion',color='orange',zorder=2)
-        ax.plot(t_4,pred_4,label=f'linear regression, y=x {slope_4}  +({intercept_4}) pm^2/ps \n D: {slope_4/6} ',linewidth=1,linestyle='dashed',color='orange',zorder=3)
+	ax.plot(t,inter1,linewidth=1.3,label=r'msd cation-cation',color='brown',zorder=2)
+	ax.plot(t_3,pred_3,label=f'linear regression, y=x {slope_3}  +({intercept_3}) pm^2/ps \n D: {slope_3/6} ',linewidth=1,linestyle='dashed',color='brown',zorder=3)
+	ax.plot(t,inter2,linewidth=1.3,label=r'msd anion-anion',color='orange',zorder=2)
+	ax.plot(t_4,pred_4,label=f'linear regression, y=x {slope_4}  +({intercept_4}) pm^2/ps \n D: {slope_4/6} ',linewidth=1,linestyle='dashed',color='orange',zorder=3)
 	ax.plot(t,inter_inter,linewidth=1.3,label=r'msd cation-anion',color='red',zorder=2)
-        ax.plot(t_5,pred_5,label=f'linear regression, y=x {slope_5}  +({intercept_5}) pm^2/ps \n D: {slope_5/6} ',linewidth=1,linestyle='dashed',color='red',zorder=3)
+	ax.plot(t_5,pred_5,label=f'linear regression, y=x {slope_5}  +({intercept_5}) pm^2/ps \n D: {slope_5/6} ',linewidth=1,linestyle='dashed',color='red',zorder=3)
 	ax.legend()
 	ax.set_xlabel(r'time / ps')
 	ax.set_ylabel(r'MSD / pm^2')
 	ax.set_box_aspect(1)
 	fig.savefig('plot.pdf', format='pdf')
-	plt.show()
-
-
-
-
+	plt.show()		
 
 if __name__ == "__main__":
 	#TESTING
@@ -535,12 +544,18 @@ if __name__ == "__main__":
 	fig.suptitle("Cation and Anion inter-diffusion MSD")
 	plt.show()
 else:
-	print("Usable Packages: ")
+	print("Main Package: ")
+	print("conductivity.all(\"filename\")")
+	print("it will produce .csv files for cation, anion, and all possible interactions")
+	print("if msd csv already produced you can load them:")
+	print("all(\"filename\",checkpoint=True)")
+	print("")
+	print("Single Package:")
 	print("x,y,z,q,cation_index,anion_index = conductivity.load_trajectory(\"filename\")")
-	print("msd = conductivity.get_selfdiffusion_msd(x[:,cation_idx[0]],y[:,cation_idx[0]],z[:,cation_idx[0]],depth=0.70)")
+	print("msd = conductivity.get_selfdiffusion_msd(x[:,cation_index[0]],y[:,cation_index[0]],z[:,cation_index[0]],depth=0.70)")
 	print("msd_collective = conductivity.get_collective_msd(x,y,z,depth=0.7)")
 	print("t = get_t(msd)")
-	print("msd_prediction,t_predtion = conductivity.regression(msd,t)")
+	print("msd_prediction,t_predition = conductivity.regression(msd,t)")
 	print("conductivity.plotting([msd1,msd2])")
 	print("conductivity.collective(filename)")
 
