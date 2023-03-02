@@ -5,8 +5,27 @@ from sklearn.linear_model import LinearRegression
 import pandas as pd
 import scipy
 import time
+import logging
 
 class End_of_Loop(Exception): pass #To being able of closing the loop outside the loop functions
+
+
+class Logger():
+	def __init__(self):
+		self.logger = logging.getLogger('log')
+		self.logger.setLevel(logging.DEBUG)
+		formatter = logging.Formatter('%(message)s')
+		if not len(self.logger.handlers):
+			consoleHandler = logging.StreamHandler()
+			consoleHandler.setLevel(logging.INFO)
+			consoleHandler.setFormatter(formatter)
+			file_handler = logging.FileHandler('logs.log')
+			file_handler.setLevel(logging.DEBUG)
+			file_handler.setFormatter(formatter)
+			self.logger.addHandler(file_handler)
+			self.logger.addHandler(consoleHandler)
+	def print(self,message):
+		self.logger.info(message)
 
 def read_line(f):  
 	#Is needed to check when the file finish and the exception need to being handled
@@ -93,8 +112,7 @@ def load_trajectory(filename):
 
 
 def regression(msd,t,scaling=0.3):
-	#Use skitlearn tools for making the linear regression
-
+	#Use skitlearn tools for making the linear regression	
 	#it takes the subset of time vector and MSD to perform linear regression
 	idx=int(len(t)*scaling)
 	t_pred=t[idx:].reshape((-1,1))
@@ -104,10 +122,12 @@ def regression(msd,t,scaling=0.3):
 	slope=model_c.coef_
 	D=model_c.coef_/6
 	intercept=model_c.intercept_
-	print("LINEAR REGRESSION ON THE LAST ",100-scaling*100," %")
-	print(f"slope : {model_c.coef_} ")
-	print(f"Intercept: {model_c.intercept_} ")
-	print(f"D : {model_c.coef_/6} pm^2/ps")
+	
+	log=Logger()
+	log.print(f"LINEAR REGRESSION ON THE LAST {100-scaling*100} %")
+	log.print(f"slope : {model_c.coef_} ")
+	log.print(f"Intercept: {model_c.intercept_} ")
+	log.print(f"D : {model_c.coef_/6} pm^2/ps")
 	#generate msd_predition point for plotting with the same spacing and interval of t_prediction
 	msd_pred = model_c.predict(t_pred)
 	return [msd_pred,t_pred],[slope,intercept]
@@ -437,6 +457,7 @@ def load_csv():
 
 def all(filename,checkpoint=False):
 	#in case msd already calculated
+	log=Logger()
 	if checkpoint:
 		t, cat, ani, inter1, inter2, inter_inter = load_csv()
 	else:
@@ -462,21 +483,20 @@ def all(filename,checkpoint=False):
 		ani = get_selfdiffusion_msd(x[:,anion_index[0]],y[:,anion_index[0]],z[:,anion_index[0]],depth=0.70)
 		pd.DataFrame({"t":t,"msd":ani}).to_csv("ani.csv",header=["t","msd"],index=None)
 	
-	#REGRESSIONS	
-	print("CATION REGRESSION:")
+	log.print("CATION REGRESSION:")
 	[pred_1,t_1],[slope_1,intercept_1] = regression(cat,t,scaling=0.3)
-	print("Anion REGRESSION:")
+	log.print("Anion REGRESSION:")
 	[pred_2,t_2],[slope_2,intercept_2] = regression(ani,t,scaling=0.3)
 	
-	print("Inter1 REGRESSION:")
+	log.print("Inter1 REGRESSION:")
 	[pred_3,t_3],[slope_3,intercept_3] = regression(inter1,t,scaling=0.3)
-	print("Inter2 REGRESSION:")
+	log.print("Inter2 REGRESSION:")
 	[pred_4,t_4],[slope_4,intercept_4] = regression(inter2,t,scaling=0.3)
-	print("Inter_inter REGRESSION:")
+	log.print("Inter_inter REGRESSION:")
 	[pred_5,t_5],[slope_5,intercept_5] = regression(inter_inter,t,scaling=0.3)
 	
 	tot_coll=cat+ani+inter1+inter2+inter_inter	
-	print("SUM cation+anion+cat_cat+anion_anion+cation_anion REGRESSION:")
+	log.print("SUM cation+anion+cat_cat+anion_anion+cation_anion REGRESSION:")
 	[pred_6,t_6],[slope_6,intercept_6] = regression(tot_coll,t,scaling=0.3)
 	
 	fig, ax = plt.subplots()
@@ -548,7 +568,7 @@ else:
 	print("conductivity.all(\"filename\")")
 	print("it will produce .csv files for cation, anion, and all possible interactions")
 	print("if msd csv already produced you can load them:")
-	print("all(\"filename\",checkpoint=True)")
+	print("conductivity.all(\"\",checkpoint=True)")
 	print("")
 	print("Single Package:")
 	print("x,y,z,q,cation_index,anion_index = conductivity.load_trajectory(\"filename\")")
