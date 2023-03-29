@@ -467,7 +467,7 @@ def all(filename,checkpoint=False):
 		# #INTERDIFFUSION same ion : cation-cation and anion-anion
 		inter1 = get_interdiffusion_msd(x[:,cation_index[0]],y[:,cation_index[0]],z[:,cation_index[0]],depth=0.7)
 		t = get_t(inter1)
-		pd.DataFrame({"t":t,"msd":inter_1}).to_csv("inter1.csv",header=["t","msd"],index=None)
+		pd.DataFrame({"t":t,"msd":inter1}).to_csv("inter1.csv",header=["t","msd"],index=None)
 		print("_________INTER ANI-ANI MSD________ ")
 		inter2 = get_interdiffusion_msd(x[:,anion_index[0]],y[:,anion_index[0]],z[:,anion_index[0]],depth=0.7)
 		pd.DataFrame({"t":t,"msd":inter2}).to_csv("inter2.csv",header=["t","msd"],index=None)
