@@ -48,28 +48,39 @@ def parsline(file):
         return x, y, z, res_num, res_name, atom_name
 
 def load_frame(filename):
+    import numpy as np
     try:
         with open(filename, 'r') as file:
             file.readline() #first line is a comment
             n_atoms = int(file.readline().strip())
-            sum_x=0
-            sum_mass=0
+            sum_cm = np.zeros(4)  #x,y,z, mass
             res_num_count = 1
-            x_save = []
+            cm = np.empty((0,3),float) #x,y,z, res_name
+            res_names = []
             for i in range(0,n_atoms):
                 x, y, z, res_num, res_name, atom_name = parsline(file)
-                if res_num_count == res_num:
-                    sum_x += x*atomic_mass[atom_name]
-                    sum_mass += atomic_mass[atom_name]
-                else:
+                if res_num_count == res_num: #same molecule
+                    sum_cm[0] += x * atomic_mass[atom_name]
+                    sum_cm[1] += y * atomic_mass[atom_name]
+                    sum_cm[2] += z * atomic_mass[atom_name]
+                    sum_cm[3] += atomic_mass[atom_name]
+                    if i == n_atoms-1 : #last line before end of frame
+                        cm = np.append(cm, np.reshape(sum_cm[0:3] / sum_cm[3], (1, 3)), axis=0)
+                        res_names.append(res_name)
+                    else:
+                        pass
+                else: #new molecule
                     res_num_count = res_num     #update the counter
-                    x_save.append(sum_x)        #save center of mass for the molecule
-                    sum_x = x                   #start new molecule
-                    sum_mass = atomic_mass[atom_name]
-            return x_save
+                    cm = np.append(cm, np.reshape(sum_cm[0:3] / sum_cm[3], (1,3)),axis=0)                     #save center of mass for the molecule
+                    sum_cm = np.array([x* atomic_mass[atom_name], y* atomic_mass[atom_name], z* atomic_mass[atom_name], atomic_mass[atom_name]])                   #start new molecule
+                    res_names.append(res_name)
+
+        return cm, res_names
     except End_of_Loop:
         pass #all trajectory processed
 
-atomic_mass = { 'H':1.008, 'C':12.011, 'O':15.999, 'N':14.0067, 'Cl':35.453, 'Al':26.9815 }
+atomic_mass = { 'H':1.008, 'C':12.011, 'O':15.999, 'N':14.0067, 'Cl':35.453, 'Al':26.9815, 'F':19.9984 }
 
-print(load_frame("test.gro"))
+cm,res_names=load_frame("test_files/test.gro")
+print(cm)
+print(res_names)
