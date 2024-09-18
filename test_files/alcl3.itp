@@ -1,0 +1,29 @@
+[ moleculetype ]
+; name       nrexcl
+alcl3             3
+
+[ atoms ]
+;  nr   type  resnr  residu  atom   cgnr    charge
+    1   Al3       1  alc     Al        1    0.670698
+    2   Cl3       1  alc     Cl1       2   -0.223566
+    3   Cl3       1  alc     Cl2       3   -0.223566
+    4   Cl3       1  alc     Cl3       4   -0.223566
+
+[ bonds ]
+;  ai    aj   func    b0        kb
+    1     2      1    0.20771    52718.4
+    1     3      1    0.20771    52718.4
+    1     4      1    0.20771    52718.4
+
+[ constraints ]
+;  ai    aj   func    b0
+
+[ pairs ]
+;   ai   aj   func
+
+[ angles ]
+;  ai    aj    ak   func    th0        cth
+    2     1     3      1    120.00     53.555
+    2     1     4      1    120.00     53.555
+    3     1     4      1    120.00     53.555
+

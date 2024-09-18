@@ -1,0 +1,26 @@
+integrator            = sd; md
+dt                    = 0.001 ;[ps]
+nsteps                = 10000 ;[10ps]
+
+nstxout-compressed    = 1000 ; [ogni ps]
+
+cutoff-scheme         = Verlet
+rlist                 = 0.7
+pbc                   = xyz
+
+coulombtype           = PME
+rcoulomb              = 0.7
+ewald-rtol            = 1.0e-5
+vdwtype               = Cut-off
+rvdw                  = 0.7
+DispCorr              = EnerPres
+
+tcoupl                = no; V-rescale
+tc-grps               = System
+tau-t                 = 1.0; 0.1
+ref-t                 = 300.0
+
+constraints           = h-bonds
+constraint-algorithm  = LINCS
+continuation          = no
+

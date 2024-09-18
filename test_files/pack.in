@@ -1,0 +1,29 @@
+tolerance 4.0
+output simbox.xyz
+filetype xyz
+
+structure emim.xyz
+  number 9
+  inside box -52.5 -52.5 -52.5 52.5 52.5 52.5
+end structure
+
+structure dfbn.xyz
+  number 2
+  inside box -52.5 -52.5 -52.5 52.5 52.5 52.5
+end structure
+
+structure alcl3.xyz
+  number 3
+  inside box -52.5 -52.5 -52.5 52.5 52.5 52.5
+end structure
+
+structure alcl4.xyz
+  number 4
+  inside box -52.5 -52.5 -52.5 52.5 52.5 52.5
+end structure
+
+structure al2.xyz
+  number 5
+  inside box -52.5 -52.5 -52.5 52.5 52.5 52.5
+end structure
+
