@@ -43,8 +43,8 @@ of the License, or (at your option) any later version.
 GROMACS:      gmx mdrun, version 2024.1
 Executable:   /usr/local/bin/gmx
 Data prefix:  /usr/local
-Working dir:  /Volumes/S.Russo_HDD/w/python_test/trajectory_files
-Process ID:   68123
+Working dir:  /Volumes/S.Russo_HDD/w/conductivity/test_files
+Process ID:   25516
 Command line:
   gmx mdrun -s nvt.tpr
 
@@ -426,7 +426,7 @@ We have the following groups for center of mass motion removal:
 RMS relative constraint deviation after constraining: 1.35e-06
 Initial temperature: 1.83708e-06 K
 
-Started mdrun on rank 0 Tue Sep 17 16:49:01 2024
+Started mdrun on rank 0 Tue Sep 24 16:41:43 2024
 
            Step           Time
               0        0.00000
@@ -561,7 +561,7 @@ Started mdrun on rank 0 Tue Sep 17 16:49:01 2024
            Step           Time
           10000       10.00000
 
-Writing checkpoint, step 10000 at Tue Sep 17 16:49:48 2024
+Writing checkpoint, step 10000 at Tue Sep 24 16:42:14 2024
 
 
    Energies (kJ/mol)
@@ -656,29 +656,29 @@ On 1 MPI rank, each using 8 OpenMP threads
  Activity:              Num   Num      Call    Wall time         Giga-Cycles
                         Ranks Threads  Count      (s)         total sum    %
 --------------------------------------------------------------------------------
- Domain decomp.            1    8        126       0.072          0.014   0.2
- Neighbor search           1    8        126       0.013          0.003   0.0
- Force                     1    8      10001       1.470          0.282   3.1
- PME mesh                  1    8      10001      38.497          7.391  81.6
- NB X/F buffer ops.        1    8      19876       1.161          0.223   2.5
- Write traj.               1    8         11       1.867          0.359   4.0
- Update                    1    8      20002       1.260          0.242   2.7
- Constraints               1    8      20004       0.866          0.166   1.8
- Rest                                              1.995          0.383   4.2
+ Domain decomp.            1    8        126       0.045          0.009   0.1
+ Neighbor search           1    8        126       0.008          0.002   0.0
+ Force                     1    8      10001       0.912          0.175   3.0
+ PME mesh                  1    8      10001      27.185          5.220  87.9
+ NB X/F buffer ops.        1    8      19876       0.690          0.133   2.2
+ Write traj.               1    8         11       0.756          0.145   2.4
+ Update                    1    8      20002       0.735          0.141   2.4
+ Constraints               1    8      20004       0.503          0.097   1.6
+ Rest                                              0.080          0.015   0.3
 --------------------------------------------------------------------------------
- Total                                            47.201          9.063 100.0
+ Total                                            30.914          5.935 100.0
 --------------------------------------------------------------------------------
  Breakdown of PME mesh activities
 --------------------------------------------------------------------------------
- PME spread                1    8      10001       3.672          0.705   7.8
- PME gather                1    8      10001       5.062          0.972  10.7
- PME 3D-FFT                1    8      20002      28.524          5.477  60.4
- PME solve Elec            1    8      10001       1.137          0.218   2.4
+ PME spread                1    8      10001       2.365          0.454   7.6
+ PME gather                1    8      10001       3.422          0.657  11.1
+ PME 3D-FFT                1    8      20002      20.448          3.926  66.1
+ PME solve Elec            1    8      10001       0.881          0.169   2.8
 --------------------------------------------------------------------------------
 
                Core t (s)   Wall t (s)        (%)
-       Time:      377.337       47.201      799.4
+       Time:      247.297       30.914      800.0
                  (ns/day)    (hour/ns)
-Performance:       18.306        1.311
-Finished mdrun on rank 0 Tue Sep 17 16:49:49 2024
+Performance:       27.952        0.859
+Finished mdrun on rank 0 Tue Sep 24 16:42:14 2024
 

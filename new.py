@@ -1,15 +1,52 @@
 #!/Users/stefano/anaconda3/bin/python
+
+atomic_mass = { 'H':1.008, 'C':12.011, 'O':15.999, 'N':14.0067, 'Cl':35.453, 'Al':26.9815, 'F':19.9984 }
+
 class trajectory:
-    def __init__(self):
-        self.traj = [] #è un vettore [x,y,z,q,atom]
+    def __init__(self, filename, format="gro"):
+        self.traj = []              # array [x,y,z,q,atom]
+        self.filename = filename    #trajectory filename
+        self.format = format        # later it will be use to implement different trajectory file formats
+        self.logger = Logger()
     def load(self):
         #trajectory loading routine
-        q = 1.000
-        atom = "C"
-        x = 1.20
-        y = 3.0
-        z = -2.78
-        self.traj = [x,y,z,q,atom]
+        import numpy as np
+        try:
+            with open(self.filename, 'r') as file:
+                # repeat for every frame up to the EOF
+                CM = []  # easier solution for appending np.arrays to an empty array without defining dimension first-hand.
+                while True:
+                    read_line(file)  # first line is a comment
+                    n_atoms = int(read_line(file).strip())
+                    sum_cm = np.zeros(4)  # x,y,z, mass
+                    res_num_count = 1
+                    cm = np.empty((0, 3), float)  # x,y,z, res_name
+                    res_names = []
+                    for i in range(0, n_atoms):
+                        x, y, z, res_num, res_name, atom_name = parsline(file)
+                        if res_num_count == res_num:  # same molecule
+                            sum_cm[0] += x * atomic_mass[atom_name]
+                            sum_cm[1] += y * atomic_mass[atom_name]
+                            sum_cm[2] += z * atomic_mass[atom_name]
+                            sum_cm[3] += atomic_mass[atom_name]
+                            if i == n_atoms - 1:  # last line before end of frame
+                                cm = np.append(cm, np.reshape(sum_cm[0:3] / sum_cm[3], (1, 3)), axis=0)
+                                res_names.append(res_name)
+                            else:
+                                pass
+                        else:  # new molecule
+                            res_num_count = res_num  # update the counter
+                            cm = np.append(cm, np.reshape(sum_cm[0:3] / sum_cm[3], (1, 3)),
+                                           axis=0)  # save center of mass for the molecule
+                            sum_cm = np.array(
+                                [x * atomic_mass[atom_name], y * atomic_mass[atom_name], z * atomic_mass[atom_name],
+                                 atomic_mass[atom_name]])  # start new molecule
+                            res_names.append(res_name)
+                    read_line(file)  # last line is a cell dimensions
+                    CM.append(cm)
+        except End_of_Loop:
+            self.logger.print("End of file reached")
+            self.traj = np.array(CM), np.array(res_names)
 
 
 class Logger():
@@ -57,45 +94,10 @@ def read_line(f):
 	else:
 		return line
 
-def load_frame(filename):
-    import numpy as np
-    try:
-        with open(filename, 'r') as file:
-            #repeat for every frame up to the EOF
-            CM = [] #easier solution for appending np.arrays to an empty array without defining dimension first-hand.
-            while True:
-                read_line(file) #first line is a comment
-                n_atoms = int(read_line(file).strip())
-                sum_cm = np.zeros(4)  #x,y,z, mass
-                res_num_count = 1
-                cm = np.empty((0,3),float) #x,y,z, res_name
-                res_names = []
-                for i in range(0,n_atoms):
-                    x, y, z, res_num, res_name, atom_name = parsline(file)
-                    if res_num_count == res_num: #same molecule
-                        sum_cm[0] += x * atomic_mass[atom_name]
-                        sum_cm[1] += y * atomic_mass[atom_name]
-                        sum_cm[2] += z * atomic_mass[atom_name]
-                        sum_cm[3] += atomic_mass[atom_name]
-                        if i == n_atoms-1 : #last line before end of frame
-                            cm = np.append(cm, np.reshape(sum_cm[0:3] / sum_cm[3], (1, 3)), axis=0)
-                            res_names.append(res_name)
-                        else:
-                            pass
-                    else: #new molecule
-                        res_num_count = res_num     #update the counter
-                        cm = np.append(cm, np.reshape(sum_cm[0:3] / sum_cm[3], (1,3)),axis=0)                     #save center of mass for the molecule
-                        sum_cm = np.array([x* atomic_mass[atom_name], y* atomic_mass[atom_name], z* atomic_mass[atom_name], atomic_mass[atom_name]])                   #start new molecule
-                        res_names.append(res_name)
-                read_line(file)  # last line is a cell dimensions
-                CM.append(cm)
-                return np.array(CM), res_names
-        return np.array(CM), res_names
-    except End_of_Loop:
-        pass #all trajectory processed
 
-atomic_mass = { 'H':1.008, 'C':12.011, 'O':15.999, 'N':14.0067, 'Cl':35.453, 'Al':26.9815, 'F':19.9984 }
 
-import numpy as np
-cm,res_names=load_frame("test_files/test.gro")
 
+#TESTING
+traj = trajectory("test_files/trj.gro")
+traj.load()
+print(traj.traj[0].shape)
