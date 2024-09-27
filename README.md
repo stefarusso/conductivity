@@ -93,7 +93,11 @@ D_i=\lim_{t\to\infty}\frac{z_i^2\;MSD(t)}{6t}.    &\qquad[9]
 \end{align}
 ```
 
-This can be usefull in case like ionic solutes in neutral solvents where there is very little correlation of motion between the ions. In case of ionic liquids this can lend to over-estimation of diffusion coefficient because th off-diagonal terms $D_{ij}$ where the MSD is calculated by the product of the deviation of different ions can be far from zero (as the solute exemple). This balance the positive value of self-diffusion $D_i$ giving a more reliable result with the collective $D_{coll}$.
+The window sliding loops can be avoided with vectorization:
+Here is the example of one of the 3 coordinate matrix
+![image](https://github.com/user-attachments/assets/68c616b1-7694-4e5d-840f-6ca3e0260604)
+
+The simple Self-diffusion can be usefull in case like ionic solutes in neutral solvents where there is very little correlation of motion between the ions. In case of ionic liquids this can lend to over-estimation of diffusion coefficient because th off-diagonal terms $D_{ij}$ where the MSD is calculated by the product of the deviation of different ions can be far from zero (as the solute exemple). This balance the positive value of self-diffusion $D_i$ giving a more reliable result with the collective $D_{coll}$.
 
 the program can reproduce the same results of Travis and VMD as you can see here
 
