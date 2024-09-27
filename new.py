@@ -114,17 +114,24 @@ def msd(coord,slice_dimension,jump):
         first_idx = np.arange(window_dim[0]*window_dim[1])                      # First index array of the sliding window, flattened
         idx_matrix = first_idx[None,:] + n*jump*np.arange(n_windows)[:,None]
         windows = X.flatten()[idx_matrix]
-        X0 = - windows[:,:n]
-        X0 = np.repeat(X0, slice_dimension, axis=1)
+        X0 = - windows[:,0:n]
+        #X0 = np.repeat(X0, slice_dimension, axis=1)
+        X0 = np.hstack([X0 for i in range(slice_dimension)])
+        print(X0[0,1])
+        print(windows[0,1])
+        print(",,,,,,PROBLEMA E' QUI!!!!! NON USA STACK HORIZONATALE")
         XR=np.sum((windows,X0),axis=0)
         XR = np.multiply(XR,XR)
         R=np.sum((R,XR),axis=0)
     #mean over all the windows
+
     msd = np.mean(R,axis=0).reshape(slice_dimension,n)
+    print(msd)
+    print("All first array should be zero!!!!!")
     #mean over all molecules
     msd = np.mean(msd,axis=1)
-    print(msd.shape)
     #Mean square deviation in nm^2, instead t needs to be ask to the user
+    print(msd)
     return msd
 
 
@@ -135,5 +142,5 @@ coord, res_names = traj.traj
 print(coord.shape)
 print("--------")
 
-MSD = msd(coord,3,2)
-print(MSD)
+MSD = msd(coord[:,res_names=="al2",:],3,2)
+print("FIRST NUMBER WHOULD BE ZERO!!!!!")
