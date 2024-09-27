@@ -93,8 +93,11 @@ D_i=\lim_{t\to\infty}\frac{z_i^2\;MSD(t)}{6t}.    &\qquad[9]
 \end{align}
 ```
 
-The window sliding loops can be avoided with vectorization:
-Here is the example of one of the 3 coordinate matrix
+##### Sliding Windows
+The MSD(t) needs to be calculated on portions of the trajectory. The mean of the MSD over the same delta t is the final data we need. For this reason a sliding windows approach is used. I took inspiration from convolutionary neural networs but here is even simpler since there is not any kernel to use. 
+
+The window sliding loops can be avoided using vectorization.
+Here is the example of one of the 3 coordinate matrix. the final matrix will have another dimension with the other 2 commponent of the coordinates [N_shifts, N*w, 3]
 ![image](https://github.com/user-attachments/assets/68c616b1-7694-4e5d-840f-6ca3e0260604)
 
 The simple Self-diffusion can be usefull in case like ionic solutes in neutral solvents where there is very little correlation of motion between the ions. In case of ionic liquids this can lend to over-estimation of diffusion coefficient because th off-diagonal terms $D_{ij}$ where the MSD is calculated by the product of the deviation of different ions can be far from zero (as the solute exemple). This balance the positive value of self-diffusion $D_i$ giving a more reliable result with the collective $D_{coll}$.
