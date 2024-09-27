@@ -95,25 +95,45 @@ def read_line(f):
 		return line
 
 
+
+
+def msd(coord,slice_dimension,jump):
+    import numpy as np
+    #MSD Vectorization
+    n = coord[:,:,0].shape[1]                                       # number of columns (molecules)
+    slice_dimension = 3                                                           # number or frames in the sliding windows
+    jump = 2                                                        # frame skipped while sliding the windows
+    window_dim = (slice_dimension, n)                                             #  sliding windows dimensions : frames, N
+    n_windows = ((coord.shape[0] - window_dim[0]) // jump) + 1      # +1 is needed for taking into account the first frame
+    print("Original Matrix:",coord[:,:,0].shape,"\tsliding window:",window_dim,"\tf:",slice_dimension,"\tjump:",jump, "\tn_windows:",n_windows)
+
+    R=np.zeros((n_windows,n*slice_dimension))
+    #loop repeated for the 3 component [X,Y,Z]
+    for i in range(coord.shape[-1]):
+        X = coord[:,:,i]
+        first_idx = np.arange(window_dim[0]*window_dim[1])                      # First index array of the sliding window, flattened
+        idx_matrix = first_idx[None,:] + n*jump*np.arange(n_windows)[:,None]
+        windows = X.flatten()[idx_matrix]
+        X0 = - windows[:,:n]
+        X0 = np.repeat(X0, slice_dimension, axis=1)
+        XR=np.sum((windows,X0),axis=0)
+        XR = np.multiply(XR,XR)
+        R=np.sum((R,XR),axis=0)
+    #mean over all the windows
+    msd = np.mean(R,axis=0).reshape(slice_dimension,n)
+    #mean over all molecules
+    msd = np.mean(msd,axis=1)
+    print(msd.shape)
+    #Mean square deviation in nm^2, instead t needs to be ask to the user
+    return msd
+
+
 #TESTING
 traj = trajectory("test_files/trj.gro")
 traj.load()
-print(traj.traj[0][:,:,0].shape)
+coord, res_names = traj.traj
+print(coord.shape)
+print("--------")
 
-
-#MSD Vectorization
-#Constants
-#n = A.shape[1]      #number of columns
-#f = 3               #number or frames in the sliding windows
-#jump = 2            #frame skipped while sliding the windows
-#window_dim = (f, n) #sliding windows dimensions : frames, N
-# #Vectorization of the for loop used for the frame window sliding mechanism.
-                                                                        # It is inspired by the convolution-NN
-#n_windows = ((A.shape[0] - window_dim[0] ) // jump ) + 1                # if there aren't enough frame to fill the next window they are just ignored
-                                                                        # +1 is needed for taking into account the first frame
-#first_idx = np.arange(window_dim[0]*window_dim[1])                      # First index array of the sliding window, flattened
-#idx_matrix = first_idx[None,:] + n*jump*np.arange(n_windows)[:,None]
-#---
-#windows = A.flatten()[idx_matrix]
-#print("Windows Matrix: ",windows.shape)
-#print("Original Matrix:",A.shape,"\tsliding window:",window_dim,"\tjump:",jump, "\tn_windows:",n_windows)
+MSD = msd(coord,3,2)
+print(MSD)
