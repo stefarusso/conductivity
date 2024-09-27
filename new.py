@@ -20,7 +20,7 @@ class trajectory:
                     n_atoms = int(read_line(file).strip())
                     sum_cm = np.zeros(4)  # x,y,z, mass
                     res_num_count = 1
-                    cm = np.empty((0, 3), float)  # x,y,z, res_name
+                    cm = np.empty((0, 3), float)  # x,y,z
                     res_names = []
                     for i in range(0, n_atoms):
                         x, y, z, res_num, res_name, atom_name = parsline(file)
@@ -95,9 +95,25 @@ def read_line(f):
 		return line
 
 
-
-
 #TESTING
 traj = trajectory("test_files/trj.gro")
 traj.load()
-print(traj.traj[0].shape)
+print(traj.traj[0][:,:,0].shape)
+
+
+#MSD Vectorization
+#Constants
+#n = A.shape[1]      #number of columns
+#f = 3               #number or frames in the sliding windows
+#jump = 2            #frame skipped while sliding the windows
+#window_dim = (f, n) #sliding windows dimensions : frames, N
+# #Vectorization of the for loop used for the frame window sliding mechanism.
+                                                                        # It is inspired by the convolution-NN
+#n_windows = ((A.shape[0] - window_dim[0] ) // jump ) + 1                # if there aren't enough frame to fill the next window they are just ignored
+                                                                        # +1 is needed for taking into account the first frame
+#first_idx = np.arange(window_dim[0]*window_dim[1])                      # First index array of the sliding window, flattened
+#idx_matrix = first_idx[None,:] + n*jump*np.arange(n_windows)[:,None]
+#---
+#windows = A.flatten()[idx_matrix]
+#print("Windows Matrix: ",windows.shape)
+#print("Original Matrix:",A.shape,"\tsliding window:",window_dim,"\tjump:",jump, "\tn_windows:",n_windows)
