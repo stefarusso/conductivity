@@ -97,41 +97,33 @@ def read_line(f):
 
 
 
-def msd(coord,slice_dimension,jump):
+def msd_ii(coord,slice_dimension,skip=0):
+    #Self diffusion (i=j) MSD
+    #coord from the same molecule residue type. Have [Frame, N, 3] shape
+    #skip are the line skipped while sliding the window matrix
+    #slice_dimension is the correlation depth (in frame lines number) of the sliding window
     import numpy as np
     #MSD Vectorization
-    n = coord[:,:,0].shape[1]                                       # number of columns (molecules)
-    slice_dimension = 3                                                           # number or frames in the sliding windows
-    jump = 2                                                        # frame skipped while sliding the windows
-    window_dim = (slice_dimension, n)                                             #  sliding windows dimensions : frames, N
-    n_windows = ((coord.shape[0] - window_dim[0]) // jump) + 1      # +1 is needed for taking into account the first frame
-    print("Original Matrix:",coord[:,:,0].shape,"\tsliding window:",window_dim,"\tf:",slice_dimension,"\tjump:",jump, "\tn_windows:",n_windows)
-
+    f, n = coord[:,:,0].shape                                       # number of columns n (molecules) and number of frames f
+    #  sliding windows dimensions : frames, N
+    n_windows = ((f - slice_dimension) // (skip + 1 )) + 1      # +1 is needed for taking into account the first frame
     R=np.zeros((n_windows,n*slice_dimension))
     #loop repeated for the 3 component [X,Y,Z]
     for i in range(coord.shape[-1]):
         X = coord[:,:,i]
-        first_idx = np.arange(window_dim[0]*window_dim[1])                      # First index array of the sliding window, flattened
-        idx_matrix = first_idx[None,:] + n*jump*np.arange(n_windows)[:,None]
+        first_idx = np.arange(slice_dimension*n)                      # First index array of the sliding window, flattened
+        idx_matrix = first_idx[None,:] + n*(skip+1)*np.arange(n_windows)[:,None]
         windows = X.flatten()[idx_matrix]
-        X0 = - windows[:,0:n]
-        #X0 = np.repeat(X0, slice_dimension, axis=1)
+        X0 = - windows[:,:n]
         X0 = np.hstack([X0 for i in range(slice_dimension)])
-        print(X0[0,1])
-        print(windows[0,1])
-        print(",,,,,,PROBLEMA E' QUI!!!!! NON USA STACK HORIZONATALE")
-        XR=np.sum((windows,X0),axis=0)
-        XR = np.multiply(XR,XR)
-        R=np.sum((R,XR),axis=0)
+        r = np.sum((windows,X0),axis=0)
+        r_quad = np.multiply(r,r)
+        R = np.sum((R,r_quad),axis=0)
     #mean over all the windows
-
     msd = np.mean(R,axis=0).reshape(slice_dimension,n)
-    print(msd)
-    print("All first array should be zero!!!!!")
     #mean over all molecules
     msd = np.mean(msd,axis=1)
     #Mean square deviation in nm^2, instead t needs to be ask to the user
-    print(msd)
     return msd
 
 
@@ -139,8 +131,12 @@ def msd(coord,slice_dimension,jump):
 traj = trajectory("test_files/trj.gro")
 traj.load()
 coord, res_names = traj.traj
+
+print("Matrix:")
 print(coord.shape)
 print("--------")
+import numpy as np
+MSD = msd_ii(coord[:,res_names=="emi",:],slice_dimension=10,skip=0)
+t=np.arange(len(MSD))
 
-MSD = msd(coord[:,res_names=="al2",:],3,2)
-print("FIRST NUMBER WHOULD BE ZERO!!!!!")
+print(MSD)
