@@ -125,11 +125,35 @@ def msd_ii(coord,slice_dimension,skip=0):
     #mean over all molecules
     msd = np.mean(msd,axis=1)
     #Mean square deviation in nm^2, instead t needs to be ask to the user
-    return msd
+    return msd*1000000 #nm^2 -> pm^2
 
+
+def regression(msd, t, scaling=0.3):
+    #msd in pm^2
+    #t in ps
+    from sklearn.linear_model import LinearRegression
+    # Use skitlearn tools for making the linear regression
+    # it takes the subset of time vector and MSD to perform linear regression
+    idx = int(len(t) * scaling)
+    t_pred = t[idx:].reshape((-1, 1))
+    msd_subset = msd[idx:]
+    # LINEAR REGRESSION
+    model_c = LinearRegression().fit(t_pred, msd_subset)
+    slope = model_c.coef_
+    D = model_c.coef_ / 6
+    intercept = model_c.intercept_
+    log = Logger()
+    log.print(f"regression depth : {100 - scaling * 100} %")
+    log.print(f"slope : {model_c.coef_} ")
+    log.print(f"Intercept: {model_c.intercept_} ")
+    log.print(f"D : {model_c.coef_ / 6} pm^2/ps \n")
+    # generate msd_predition point for plotting with the same spacing and interval of t_prediction
+    msd_pred = model_c.predict(t_pred)
+    print(D)
+    return [msd_pred, t_pred], [slope, intercept]
 
 #TESTING
-traj = trajectory("test_files/trj.gro")
+traj = trajectory("test_files/test.gro")
 traj.load()
 coord, res_names = traj.traj
 
@@ -137,7 +161,18 @@ print("Matrix:")
 print(coord.shape)
 print("--------")
 import numpy as np
-MSD = msd_ii(coord[:,res_names=="emi",:],slice_dimension=10,skip=0)
+MSD = msd_ii(coord[:,res_names=="emi",:],slice_dimension=30,skip=0)
 t=np.arange(len(MSD))
-
 print(MSD)
+print("__________")
+#msd_pred, var_regression =regression(MSD, t)
+
+from matplotlib import pyplot as py
+py.plot(t,MSD)
+py.show()
+import pandas as pd
+travis = pd.read_csv("test_files/msd_C6H11N2_#2.csv", header=0, delimiter=";")
+travis.columns=["r","msd","int"]
+print(travis)
+py.plot(travis["r"],travis["msd"])
+py.show()

@@ -1,17 +1,17 @@
 ;
 ;	File 'mdout.mdp' was generated
-;	By user: stefano (501)
-;	On host: treonina.chem.uniroma1.it
-;	At date: Tue Sep 17 16:48:56 2024
+;	By user: pc-ste-1 (1000)
+;	On host: pc-ste-1
+;	At date: Wed Oct  2 17:49:31 2024
 ;
 ;	Created by:
-;	                     :-) GROMACS - gmx grompp, 2024.1 (-:
+;	           :-) GROMACS - gmx grompp, 2024.1 (double precision) (-:
 ;	
-;	Executable:   /usr/local/bin/gmx
-;	Data prefix:  /usr/local
-;	Working dir:  /Volumes/S.Russo_HDD/w/python_test/trajectory_files
+;	Executable:   /home/pc-ste-1/software/gmx_d/BIN/bin/gmx_d
+;	Data prefix:  /home/pc-ste-1/software/gmx_d/BIN
+;	Working dir:  /home/pc-ste-1/w/conductivity/test_files
 ;	Command line:
-;	  gmx grompp -f run.mdp -p topol.top -c simbox.gro -o nvt.tpr
+;	  gmx_d grompp -f run.mdp -c cell.gro -p topol.top -o nvt.tpr -maxwarn 10
 
 ; VARIOUS PREPROCESSING OPTIONS
 ; Preprocessor information: use cpp syntax.
@@ -25,7 +25,7 @@ integrator               = sd
 ; Start time and timestep in ps
 tinit                    = 0
 dt                       = 0.001
-nsteps                   = 10000
+nsteps                   = 100000
 ; For exact run continuation or redoing part of a run
 init-step                = 0
 ; Part index is updated automatically on checkpointing (keeps files separate)
@@ -175,7 +175,7 @@ annealing-temp           =
 ; GENERATE VELOCITIES FOR STARTUP RUN
 gen-vel                  = no
 gen-temp                 = 300
-gen-seed                 = 1541373357
+gen-seed                 = -70000641
 
 ; OPTIONS FOR BONDS    
 constraints              = h-bonds

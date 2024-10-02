@@ -1,12 +1,14 @@
 ! TRAVIS input file
-! Created with TRAVIS version compiled at Sep 24 2023 00:46:02
+! Created with TRAVIS version compiled at Feb  2 2024 11:05:51
 ! Source code version: Jul 29 2022
-! Input file written at Wed Oct  2 17:56:55 2024.
+! Input file written at Tue Oct  1 15:44:25 2024.
 ! Use the advanced mode until the analysis selection menu (y/n)? [no] 
 
 ! Use these values (y) or enter different values (n)? [yes] 
 
 ! Update cell geometry in every time step (i.e., NPT ensemble) (y) or use fixed cell (n)? [yes] 
+n
+! Exclude Al atoms from bond recognition (y/n)? [yes] 
 n
 ! Create images of the structural formulas (y/n)? [no] 
 
@@ -18,9 +20,11 @@ msd
 
 ! Enter the physical time distance between successive trajectory frames in fs: [0.5] 
 1000
+! Which molecule should be observed (Al2Cl7=1, AlCl4=2, AlCl3=3, C6F2H4=4, C6H11N2=5)? 
+5
 ! Which atom(s) to take from OM C6H11N2 (e.g. "C1,C3-5,H", "*"=all)? [#2]
 
-! Enter the correlation depth for this MSD (in trajectory frames): [30] 
+! Enter the correlation depth for this MSD (in trajectory frames): [3] 
 10
 ! Add another observation (y/n)? [no] 
 

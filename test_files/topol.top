@@ -1,16 +1,8 @@
 #include "ff.itp"
 #include "emim.itp"
-#include "alcl4.itp"
-#include "alcl3.itp"
-#include "al2.itp"
-#include "dfbn.itp"
 
 [ system ]        
-emim dfbn alcl3 alcl4 al2
+emim 
    
 [ molecules ]     
 emim                 9
-dfbn                 2
-alcl3                3
-alcl4                4
-al2                  5
