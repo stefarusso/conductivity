@@ -1,0 +1,548 @@
+Command line:
+"travis trj.gro"
+
+
+  ________                                 __
+ /        |                               /  |
+ ########/ ______    ______    __     __  ##/    _______
+    ## |  /      \  /      \  /  \   /  | /  |  /       |
+    ## | /######  | ######  | ##  \ /##/  ## | /#######/
+    ## | ## |  ##/  /    ## |  ##  /##/   ## | ##      \
+    ## | ## |      /####### |   ## ##/    ## |  ######  |
+    ## | ## |      ##    ## |    ###/     ## | /     ##/
+    ##/  ##/        #######/      #/      ##/  #######/
+
+    TRajectory Analyzer and VISualizer  -  Open-source free software under GNU GPL v3
+
+    Copyright (c) Martin Brehm      (2009-2022), University of Halle (Saale)
+                  Martin Thomas     (2012-2022)
+                  Sascha Gehrke     (2016-2022), University of Bonn
+                  Barbara Kirchner  (2009-2022), University of Bonn
+
+    http://www.travis-analyzer.de
+
+    Please cite: J. Chem. Phys. 2020, 152 (16), 164105.         (DOI 10.1063/5.0005078 )
+                 J. Chem. Inf. Model. 2011, 51 (8), 2007-2023.  (DOI 10.1021/ci200217w )
+
+    There is absolutely no warranty on any results obtained from TRAVIS.
+
+ #  Running on treonina.chem.uniroma1.it at Tue Oct  1 15:44:25 2024 (PID 24948)
+ #  Running in /Volumes/S.Russo_HDD/w/conductivity/test_files
+ #  Version: Jul 29 2022, built at Feb  2 2024, 11:05:15, compiler "13.2.0", GCC 13.2.0
+ #  Target platform: Linux, __cplusplus=201402L, Compile flags: NEW_CHARGEVAR DEBUG_ARRAYS 
+ #  Machine: ARM64, char=1b, int=4b, long=8b, addr=8b, 0xA0B0C0D0=D0,C0,B0,A0.
+ #  Home: /Users/stefano,  Executable: /usr/local/bin/travis
+ #  Input from terminal,  Output to terminal
+
+    >>> Please use a color scheme with dark background or specify "-nocolor"! <<<
+
+    Loading configuration from /Users/stefano/.travis.conf ...
+
+    Opening position trajectory trj.gro ...
+
+    Trajectory contains approximately 11 frames (just a *guess* from the file size of 132.42 KiB).
+
+    Digits or special characters in element labels not allowed.
+    Removing those characters from all atom labels.
+
+    272 atoms in the system: 17x Al, 66x C, 60x Cl, 4x F, 107x H, 18x N
+
+    System extent:  X = {    +17 .. +10490 pm }, dX = 10473 pm
+      (in step 1)   Y = {   +642 .. +10431 pm }, dY = 9789 pm
+                    Z = {    +32 .. +10498 pm }, dZ = 10466 pm
+
+    The "advanced mode" offers seldomly required features, including support for non-orthorhombic
+    simulation cells, NPT ensemble, non-periodic systems, user-definded virtual atoms, pseudomolecules, ...
+
+    Use the advanced mode until the analysis selection menu (y/n)? [no] 
+
+    Found cell geometry data in trajectory file:
+
+      X = 10500.00 pm,   Y = 10500.00 pm,   Z = 10500.00 pm
+
+    The overall box density is 0.005472 g/cm^3.
+
+    Assuming a 3D-periodic cell.
+
+    Use these values (y) or enter different values (n)? [yes] 
+    Update cell geometry in every time step (i.e., NPT ensemble) (y) or use fixed cell (n)? [yes] n
+
+    Using the following element data:
+
+      Element | Ord. Number |  Mass / u | Cov. Radius / pm | VdW Radius / pm | Color
+    ----------|-------------|-----------|------------------|-----------------|----------
+      H       |           1 |   1.00798 |            37.00 |          109.00 | #FFFFFF
+      C       |           6 |  12.01060 |            82.00 |          170.00 | #808080
+      N       |           7 |  14.00690 |            77.00 |          155.00 | #0000FF
+      F       |           9 |  18.99840 |            73.00 |          147.00 | #00FF00
+      Al      |          13 |  26.98154 |           154.00 |          184.00 | #00FFFF
+      Cl      |          17 |  35.45150 |           102.00 |          175.00 | #00FF00
+
+
+    The trajectory contains some metal atoms.
+    In many cases, these are ions, and should not form any covalent bonds.
+
+      Exclude Al atoms from bond recognition (y/n)? [yes] n
+
+    Initialized spatial domain engine with 29 x 29 x 29 cells, min. diameter = 354 pm.
+
+    Molecule recognition [######################################################]
+
+    23 molecules found.
+
+    Sorting atom types...
+    Setting up bond lists...
+    Building atom codes...
+    Creating refined topological atom order...
+      [#######################] Done.
+    Creating bond list...
+    Creating angle list...
+    Grouping together equivalent molecules...
+    Found 5 unique molecule types.
+    Sorting molecule types by molecular mass...
+    Found 2 rings.
+    Refining ring systems...
+    Assigning ring systems to molecule types...
+    Sorting rings by size...
+    Molecule recognition finished.
+
+Output of bond matrices:
+
+*** Molecule 1: Al2Cl7; Representant 1; Distances in pm ***
+
+   Al1 Al2 Cl1 Cl2 Cl3 Cl4 Cl5 Cl6 Cl7 
+Al1 ***  -  220  -  221 221 222  -   -  
+Al2  -  *** 221 221  -   -   -  221 221 
+Cl1 220 221 ***  -   -   -   -   -   -  
+Cl2  -  221  -  ***  -   -   -   -   -  
+Cl3 221  -   -   -  ***  -   -   -   -  
+Cl4 221  -   -   -   -  ***  -   -   -  
+Cl5 222  -   -   -   -   -  ***  -   -  
+Cl6  -  221  -   -   -   -   -  ***  -  
+Cl7  -  221  -   -   -   -   -   -  *** 
+
+    Atoms Al1, Al2 are equivalent.
+    Atoms Cl2, Cl3, Cl4, Cl5, Cl6, Cl7 are equivalent.
+
+*** Molecule 2: AlCl4; Representant 1; Distances in pm ***
+
+   Al1 Cl1 Cl2 Cl3 Cl4 
+Al1 *** 221 221 221 221 
+Cl1 221 ***  -   -   -  
+Cl2 221  -  ***  -   -  
+Cl3 221  -   -  ***  -  
+Cl4 221  -   -   -  *** 
+
+    Atoms Cl1, Cl2, Cl3, Cl4 are equivalent.
+
+*** Molecule 3: AlCl3; Representant 1; Distances in pm ***
+
+   Al1 Cl1 Cl2 Cl3 
+Al1 *** 221 222 221 
+Cl1 221 ***  -   -  
+Cl2 222  -  ***  -  
+Cl3 221  -   -  *** 
+
+    Atoms Cl1, Cl2, Cl3 are equivalent.
+
+*** Molecule 4: C6F2H4; Representant 1; Distances in pm ***
+    (ring bonds are shown in green)
+
+    C1  C2  C3  C4  C5  C6  F1  F2  H1  H2  H3  H4 
+C1  *** 139 139  -   -   -  135  -   -   -   -   -  
+C2  139 ***  -  140  -   -   -  133  -   -   -   -  
+C3  139  -  ***  -  140  -   -   -  108  -   -   -  
+C4   -  140  -  ***  -  140  -   -   -  108  -   -  
+C5   -   -  140  -  *** 139  -   -   -   -  108  -  
+C6   -   -   -  140 139 ***  -   -   -   -   -  108 
+F1  135  -   -   -   -   -  ***  -   -   -   -   -  
+F2   -  133  -   -   -   -   -  ***  -   -   -   -  
+H1   -   -  108  -   -   -   -   -  ***  -   -   -  
+H2   -   -   -  108  -   -   -   -   -  ***  -   -  
+H3   -   -   -   -  108  -   -   -   -   -  ***  -  
+H4   -   -   -   -   -  108  -   -   -   -   -  *** 
+
+    6-ring: C3 - C5 - C6 - C4 - C2 - C1
+
+    Atoms C1, C2 are equivalent.
+    Atoms C3, C4 are equivalent.
+    Atoms C5, C6 are equivalent.
+    Atoms F1, F2 are equivalent.
+    Atoms H1, H2 are equivalent.
+    Atoms H3, H4 are equivalent.
+
+*** Molecule 5: C6H11N2; Representant 1; Distances in pm ***
+    (ring bonds are shown in green)
+
+    C1  C2  C3  C4  C5  C6  H1  H2  H3  H4  H5  H6  H7  H8  H9  H10 H11 N1  N2 
+C1  ***  -   -   -   -   -  107  -   -   -   -   -   -   -   -   -   -  135 134 
+C2   -  ***  -   -   -  153  -  111 110  -   -   -   -   -   -   -   -  147  -  
+C3   -   -  *** 138  -   -   -   -   -  108  -   -   -   -   -   -   -  136  -  
+C4   -   -  138 ***  -   -   -   -   -   -  109  -   -   -   -   -   -   -  134 
+C5   -   -   -   -  ***  -   -   -   -   -   -  111 111 111  -   -   -   -  146 
+C6   -  153  -   -   -  ***  -   -   -   -   -   -   -   -  111 111 111  -   -  
+H1  107  -   -   -   -   -  ***  -   -   -   -   -   -   -   -   -   -   -   -  
+H2   -  111  -   -   -   -   -  ***  -   -   -   -   -   -   -   -   -   -   -  
+H3   -  110  -   -   -   -   -   -  ***  -   -   -   -   -   -   -   -   -   -  
+H4   -   -  108  -   -   -   -   -   -  ***  -   -   -   -   -   -   -   -   -  
+H5   -   -   -  109  -   -   -   -   -   -  ***  -   -   -   -   -   -   -   -  
+H6   -   -   -   -  111  -   -   -   -   -   -  ***  -   -   -   -   -   -   -  
+H7   -   -   -   -  111  -   -   -   -   -   -   -  ***  -   -   -   -   -   -  
+H8   -   -   -   -  111  -   -   -   -   -   -   -   -  ***  -   -   -   -   -  
+H9   -   -   -   -   -  111  -   -   -   -   -   -   -   -  ***  -   -   -   -  
+H10  -   -   -   -   -  111  -   -   -   -   -   -   -   -   -  ***  -   -   -  
+H11  -   -   -   -   -  111  -   -   -   -   -   -   -   -   -   -  ***  -   -  
+N1  135 147 136  -   -   -   -   -   -   -   -   -   -   -   -   -   -  ***  -  
+N2  134  -   -  134 146  -   -   -   -   -   -   -   -   -   -   -   -   -  *** 
+
+    5-ring: N1 - C3 - C4 - N2 - C1
+
+    Atoms H2, H3 are equivalent.
+    Atoms H6, H7, H8 are equivalent.
+    Atoms H9, H10, H11 are equivalent.
+
+
+*** The following 5 kinds of molecules have been recognized:
+    (ordered by molecular mass)
+
+  - Molecule 1:  Al2Cl7 (5 pieces, 302.12 g/mol)
+      (3 noneq. atoms, 2 noneq. bonds, 3 noneq. angles)
+      Concentration:   0.007172 mol/liter
+
+  - Molecule 2:  AlCl4 (4 pieces, 168.79 g/mol)
+      (2 noneq. atoms, 1 noneq. bond, 1 noneq. angle)
+      Concentration:   0.005738 mol/liter
+
+  - Molecule 3:  AlCl3 (3 pieces, 133.34 g/mol)
+      (2 noneq. atoms, 1 noneq. bond, 1 noneq. angle)
+      Concentration:   0.004303 mol/liter
+
+  - Molecule 4:  C6F2H4 (2 pieces, 114.09 g/mol)
+      (6 noneq. atoms, 7 noneq. bonds, 9 noneq. angles)
+      Concentration:   0.002869 mol/liter
+      Detected 1 ring:
+         1.)  6-ring: C3 - C5 - C6 - C4 - C2 - C1
+
+  - Molecule 5:  C6H11N2 (9 pieces, 111.17 g/mol)
+      (14 noneq. atoms, 14 noneq. bonds, 23 noneq. angles)
+      Concentration:   0.012910 mol/liter
+      Detected 1 ring:
+         1.)  5-ring: N1 - C3 - C4 - N2 - C1
+
+
+    If you switch on "USE_OPENBABEL" in config.h, TRAVIS can print SMILES strings of your molecules.
+
+    You can create images of the structural formulas with the atom labels for easier
+    identification of the atoms (requires installed GraphViz package - see www.graphviz.org).
+
+    Create images of the structural formulas (y/n)? [no] 
+
+    Accept these molecules (y) or change something (n)? [yes] 
+
+    Uniting molecules which have been broken by wrapping...
+      - Molecule C6H11N2[1] united, 6 bonds unwrapped.
+      - Molecule C6H11N2[7] united, 6 bonds unwrapped.
+
+    Determining maximum molecular diameters...
+
+    Found the following maximal molecular diameters:
+
+      (*) Molecule 1 (Al2Cl7):     694.56 pm
+
+      (*) Molecule 2 (AlCl4):      361.74 pm
+
+      (*) Molecule 3 (AlCl3):      383.76 pm
+
+      (*) Molecule 4 (C6F2H4):     522.46 pm
+
+      (*) Molecule 5 (C6H11N2):    763.63 pm
+
+
+    The atoms are currently ordered by topological priority.
+
+    Defining virtual atom #1 as molecular Center of Geometry:
+      - Al2Cl7...
+      - AlCl4...
+      - AlCl3...
+      - C6F2H4...
+      - C6H11N2...
+
+    Defining virtual atom #2 as molecular Center of Mass:
+      - Al2Cl7...
+      - AlCl4...
+      - AlCl3...
+      - C6F2H4...
+      - C6H11N2...
+
+    Defining ring centers in C6F2H4:
+      - Defining #3 as Center of Ring 1: C3 - C5 - C6 - C4 - C2 - C1
+
+    Defining ring centers in C6H11N2:
+      - Defining #3 as Center of Ring 1: N1 - C3 - C4 - N2 - C1
+
+    Defining molecular dipole vectors:
+
+      The last virtual atom of each molecule is defined as the tip of the dipole vector
+      starting in center of mass (#2). 1 Debye corresponds to 100 pm of vector length.
+      Only useful if dipole/charge data is provided. Otherwise vector has always length of zero.
+
+      - Dipole vector #2 --> #3 in Al2Cl7 ...
+      - Dipole vector #2 --> #3 in AlCl4 ...
+      - Dipole vector #2 --> #3 in AlCl3 ...
+      - Dipole vector #2 --> #4 in C6F2H4 ...
+      - Dipole vector #2 --> #4 in C6H11N2 ...
+
+>>> 17 virtual atoms have been defined: >>>
+
+    #1 in Al2Cl7: Center of Geometry.
+    #2 in Al2Cl7: Center of Mass.
+
+    #3 in Al2Cl7 - tip of molecular dipole vector starting in #2.
+
+    #1 in AlCl4: Center of Geometry.
+    #2 in AlCl4: Center of Mass.
+
+    #3 in AlCl4 - tip of molecular dipole vector starting in #2.
+
+    #1 in AlCl3: Center of Geometry.
+    #2 in AlCl3: Center of Mass.
+
+    #3 in AlCl3 - tip of molecular dipole vector starting in #2.
+
+    #1 in C6F2H4: Center of Geometry.
+    #2 in C6F2H4: Center of Mass.
+
+    #3 in C6F2H4 - defined through center:
+      -  C3    Weight 16.67%
+      -  C5    Weight 16.67%
+      -  C6    Weight 16.67%
+      -  C4    Weight 16.67%
+      -  C2    Weight 16.67%
+      -  C1    Weight 16.67%
+
+    #4 in C6F2H4 - tip of molecular dipole vector starting in #2.
+
+    #1 in C6H11N2: Center of Geometry.
+    #2 in C6H11N2: Center of Mass.
+
+    #3 in C6H11N2 - defined through center:
+      -  N1    Weight 20.00%
+      -  N2    Weight 20.00%
+      -  C3    Weight 20.00%
+      -  C4    Weight 20.00%
+      -  C1    Weight 20.00%
+
+    #4 in C6H11N2 - tip of molecular dipole vector starting in #2.
+
+<<< End of virtual atoms <<<
+
+
+>>> List of functions <<<
+
+ *** Static (time independent) Functions
+ cdf      - Combined Distribution Function
+ rdf      - Radial Distribution Function
+ adf      - Angular Distribution Function
+ ddf      - Dihedral Distribution Function
+ pldf     - Point-Plane Distance Distribution
+ lidf     - Point-Line Distance Distribution
+ plproj   - Plane Projection Distribution
+ dprof    - Fixed Plane Density Profile
+ fpp      - Fixed Plane Projection
+ dens     - Density Distribution Function
+ sdf      - Spatial Distribution Function
+ psdf     - Pseudo SDF (only 2 ref. atoms)
+ dip      - Dipole Distribution Function
+ cond     - Evaluate Structural Condition
+ sfac     - Compute Structure Factor
+ agtopo   - Aggregation Topology Analysis
+ sankey   - Sankey diagram plot
+ cmat     - Contact Matrix / Connection Matrix
+ geodens  - Particle Density inside Geometric Object
+
+ *** Dynamic (time dependent) Functions
+ vdf      - Velocity Distribution Function
+ fdf      - Force Distribution Function
+ msd      - Mean Square Displacement / Diffusion Coefficients
+ acf      - Velocity Autocorrelation Functions
+ rdyn     - Vector Reorientation Dynamics
+ vhcf     - Van Hove Correlation Function
+ aggr     - Aggregation Functions (DACF, DLDF, DDisp)
+ hbond    - Hydrogen Bond Dynamics
+ ionpair  - Diffusion Corrected Ion Pair Dynamics
+ tddf     - Time Dependent Distribution Functions
+
+ *** Spectroscopic Functions
+ spec     - New Spectroscopy Module (IR, Raman, VCD, ROA)
+ power    - Calculate Power Spectrum
+ nc       - Normal Coordinate Analysis
+ ir       - (old) Calculate IR Spectrum
+ raman    - (old) Calculate Raman Spectrum
+ vcd      - (old) Calculate VCD Spectrum
+ rera     - Calculate Resonance Raman Spectrum
+ drst     - Save Dipole Restart File
+ mrst     - Save Magnetic Moment Restart File
+ pol      - Set up Polarizability Calculation
+
+ *** Miscellaneous Functions
+ env      - Save Trajectory of RM Environment / TDO Plot
+ proc     - Save Processed Trajectory
+ cut      - Cut Clusters
+ reg      - Region-specific Analysis
+ chi      - Chirality Analysis
+ eck      - Transform to Eckart Frame
+ swan     - Sort Wannier Centers
+ voro     - Basic Voronoi Analysis
+ vori     - Voronoi Integration Functions
+ vorochg  - Voronoi Charge Optimization
+ doma     - Domain Analysis
+ order    - Order Parameters
+ hole     - Hole Theory based Analysis
+ cla      - Cluster Analysis
+
+   (You may specify multiple analyses at once, but
+    the safe way is to perform only one kind of analysis at a time.)
+
+    Which functions to compute (comma separated)? msd
+
+ msd     - Mean Square Displacement / Diffusion Coefficients
+
+    The advanced mode includes some options which are quite powerful,
+    yet possibly weird or seldomly required.
+
+    Use the advanced mode for the main part (y/n)? [no] 
+
+    Enter the physical time distance between successive trajectory frames in fs: [0.5] 1000
+
+
+>>> Observation 1 >>>
+
+    Which molecule should be observed (Al2Cl7=1, AlCl4=2, AlCl3=3, C6F2H4=4, C6H11N2=5)? 5
+
+*** Mean Square Displacement
+
+    Which atom(s) to take from OM C6H11N2 (e.g. "C1,C3-5,H", "*"=all)? [#2] 
+
+    The correlation depth of the MSD determines the maximum temporal distance between two trajectory frames to be
+    considered, and the maximum correlation time on the horizontal axis. It has nothing to do with selecting a certain
+    part of the trajectory. The full trajectory is always used to compute the MSD, unless otherwise specified further below.
+
+    Note: The correlation depth should not be larger than approx. 30% of the total trajectory step count.
+
+    Enter the correlation depth for this MSD (in trajectory frames): [3] 10
+
+    Taking every 1. step for the time axis, shifting correlation window 1 steps at once.
+    If you have to change these settings, use the "advanced mode".
+
+<<< End of Observation 1 <<<
+
+    Add another observation (y/n)? [no] 
+
+>>> Observation List >>>
+
+  *** Observation 1
+    - MSD: C6H11N2_#2
+
+<<< End of Observation List <<<
+
+
+    Not wrapping molecules into the box.
+
+    Remove center of mass movement of the box (y/n)? [yes] n
+
+    Skip repeated time steps (y/n)? [no] 
+    In which trajectory frame to start processing the trajectory? [1] 
+    How many trajectory frames to read (from this position on)? [all] 
+    Use every n-th read trajectory frame for the analysis: [1] 
+
+    Using 11 time steps: Every 1st within range 1 - approx. 11.
+
+########## All information collected ##########
+
+>>> Initialization >>>
+
+Initializing observation 1...
+  Creating MSD...
+    MSD Cache: Trying to reserve 2.40 KiB of memory...
+
+<<< End of Initialization <<<
+
+
+##########   Starting Main Pass   ##########
+
+Hint: Press CTRL+C once to softly interrupt analysis and still write the results.
+      Creating an empty file named EXIT ("touch EXIT") has the same effect.
+
+Step      0 ...
+Discontinuity in step 3: C6H11N2[2] #2 moved 10214.78 pm. Can't compute MSD from wrapped trajectory - please use unwrapped trajectory..
+Discontinuity in step 4: C6H11N2[7] #2 moved 10315.29 pm. Can't compute MSD from wrapped trajectory - please use unwrapped trajectory...
+Discontinuity in step 6: C6H11N2[3] #2 moved 10232.05 pm. Can't compute MSD from wrapped trajectory - please use unwrapped trajectory......
+End of trajectory file reached.
+
+
+##########   Main pass done   ##########
+
+11 time steps processed.
+
+
+
+    Finishing analyses:
+----------------------------------------------------------------------------------------------------------
+
+
+>>> Observation 1 >>>
+
+* Mean Square Displacement
+    Computing square displacement of cached vectors...
+         1/9:  [##########]
+         2/9:  [##########]
+         3/9:  [##########]
+         4/9:  [##########]
+         5/9:  [##########]
+         6/9:  [##########]
+         7/9:  [##########]
+         8/9:  [##########]
+         9/9:  [##########]
+    585 bin entries.
+
+    Saving result as msd_C6H11N2_#2.csv ...
+
+    Performing linear regression on interval 5.00 - 10.00 ps...
+
+      MSD(t) = 8109008.065234 + 2891758.716831 * t   (units: [MSD] = pm^2, [t] = ps).
+           R = 0.975667   (correlation coefficient)
+
+      Diffusion coefficient D = 481959.786139 pm^2/ps  =  4.8196E-07 m^2/s.
+        (assuming <x^2> = 6 * D * t)
+
+    Saving linear regression curve as msd_C6H11N2_#2_fit.csv ...
+[Renaming existing File msd_C6H11N2_#2_fit.csv to #1#[...].csv ...OK.]
+
+
+----------------------------------------------------------------------------------------------------------
+    Finished all analyses.
+
+
+    Note: To show a list of all persons who contributed to TRAVIS,
+          please add "-credits" to your command line arguments, or set the
+          variable "SHOWCREDITS" to "TRUE" in your travis.conf file.
+
+    Source code from other projects used in TRAVIS:
+      - lmfit     from Joachim Wuttke
+      - kiss_fft  from Mark Borgerding
+      - voro++    from Chris Rycroft
+
+    http://www.travis-analyzer.de
+
+    Please cite all of the following articles for the analyses you have used:
+
+  * For TRAVIS in general:
+
+    "TRAVIS - A Free Analyzer for Trajectories from Molecular Simulation",
+    M. Brehm, M. Thomas, S. Gehrke, B. Kirchner; J. Chem. Phys. 2020, 152 (16), 164105.   (DOI 10.1063/5.0005078 )
+
+    "TRAVIS - A Free Analyzer and Visualizer for Monte Carlo and Molecular Dynamics Trajectories",
+    M. Brehm, B. Kirchner; J. Chem. Inf. Model. 2011, 51 (8), pp 2007-2023.   (DOI 10.1021/ci200217w )
+
+*** The End ***
+

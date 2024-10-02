@@ -4,7 +4,8 @@ atomic_mass = { 'H':1.008, 'C':12.011, 'O':15.999, 'N':14.0067, 'Cl':35.453, 'Al
 
 class trajectory:
     def __init__(self, filename, format="gro"):
-        self.traj = []              # array [x,y,z,q,atom]
+        self.traj = []              # array [x,y,z] (n_frames, n_mols), [res_name] (1, n_mols)
+        self.msd = []               # array [msd] (1,t)
         self.filename = filename    #trajectory filename
         self.format = format        # later it will be use to implement different trajectory file formats
         self.logger = Logger()
