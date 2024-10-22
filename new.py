@@ -49,7 +49,6 @@ class trajectory:
             self.logger.print("End of file reached")
             self.traj = np.array(CM), np.array(res_names)
 
-
 class Logger():
     def __init__(self):
         import logging
@@ -85,7 +84,6 @@ def parsline(file):
         #end gromacs
         return x, y, z, res_num, res_name, atom_name
 
-
 def read_line(f):
 	#Is needed to check when the file finish and the exception need to being handled
 	line=f.readline()
@@ -94,9 +92,6 @@ def read_line(f):
 		raise End_of_Loop
 	else:
 		return line
-
-
-
 
 def msd_ii(coord,slice_dimension,skip=0):
     #Self diffusion (i=j) MSD
@@ -127,7 +122,6 @@ def msd_ii(coord,slice_dimension,skip=0):
     #Mean square deviation in nm^2, instead t needs to be ask to the user
     return msd*1000000 #nm^2 -> pm^2
 
-
 def regression(msd, t, scaling=0.3):
     #msd in pm^2
     #t in ps
@@ -152,7 +146,7 @@ def regression(msd, t, scaling=0.3):
     print(D)
     return [msd_pred, t_pred], [slope, intercept]
 
-#TESTING
+#TESTING------------------------------------------------------------------
 traj = trajectory("test_files/test.gro")
 traj.load()
 coord, res_names = traj.traj
@@ -161,18 +155,18 @@ print("Matrix:")
 print(coord.shape)
 print("--------")
 import numpy as np
-MSD = msd_ii(coord[:,res_names=="emi",:],slice_dimension=30,skip=0)
+MSD = msd_ii(coord[:,res_names=="emi",:],slice_dimension=100,skip=0)
 t=np.arange(len(MSD))
 print(MSD)
 print("__________")
 #msd_pred, var_regression =regression(MSD, t)
 
-from matplotlib import pyplot as py
-py.plot(t,MSD)
-py.show()
+import matplotlib.pyplot as plt
+plt.plot(t,MSD, label="MSD")
 import pandas as pd
 travis = pd.read_csv("test_files/msd_C6H11N2_#2.csv", header=0, delimiter=";")
 travis.columns=["r","msd","int"]
 print(travis)
-py.plot(travis["r"],travis["msd"])
-py.show()
+plt.plot(travis["r"],travis["msd"],label="TRAVIS")
+plt.legend()
+plt.show()
